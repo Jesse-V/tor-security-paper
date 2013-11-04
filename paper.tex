@@ -3,19 +3,58 @@
 
 \begin{document}
 
-\title{An Analysis of the Strengths and Weaknesses of the Tor Network \\ \Large Computer Security 1 - CS5460}
+\title{The Tor Network - Strengths and Weaknesses \\ \Large Computer Security 1 - CS5460 \\ \LaTeX{}}
 \author{Jesse Victors}
 
 \maketitle
 
-\section{title}
+\section{Introduction}
 
-section stuff...
+The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tor routes TCP traffic through a worldwide and volunteer network of over four thousand relays. Its encryption, authentication, and routing protocols are designed to make it exceptionally difficult for an adversary to identify an end user or reveal their traffic.
 
-\subsection{title}
+\section{Design}
 
-subsection stuff...
+Tor provides an anonymity and privacy layer by relaying all end-user TCP traffic through a series of \textit{relays} on the Tor network. Typically this route consists of a carefully-constructed three-hop path known as a \textit{circuit}, which changes over time. These nodes in the circuit are referred to as \textit{entry guard}, \textit{middle router}, and the \textit{exit node}, respectively. Only the first node can determine the origin of TCP traffic through Tor, and only the exit node can examine the contents and its destination. Nodes in the middle are unable to determine either. No single node can determine the origin, the contents, and the destination of traffic through the network. Tor's architecture is designed to make it exceptionally difficult for a well-resourced adversary to uncover the identity of the end-user and their network activities, even if nodes are compromised.\cite{McCoy2008}
 
-\LaTeX{}
+\subsection{Routing}
+
+Routing information is distributed by a set of authoritative directory servers.\cite{McCoy2008}
+
+Tor achieves anonymity by routing a user's traffic through a circuit of several random relays, wherein each relay is only capable of decrypting the address of the next relay in line. Hence, even compromised relays will be unable to deduce what the traffic is or where they came from, and an outsider is faced with multiple layers of public-key -- either RSA or elliptic curve -- encryption on top of TLS protocols. Currently, Tor is one of the most secure tools to use against network surveillance, traffic analysis, and to bypassing information censorship.
+
+\subsection{Encryption}
+
+Encryption...
+
+\subsubsection{RSA}
+
+RSA...
+
+\subsubsection{Elliptic-curve}
+
+Elliptic-curve...
+
+\subsection{Authentication}
+
+Authentication...
+
+\section{Adversaries}
+
+It was recently revealed that the National Security Administration (NSA) has been targeting Tor, albeit with marginal success in breaking the anonymity and privacy of its users. However, in early October, the FBI successfully identified and arrested the owner of the Silk Road, a black market operating as a hidden service within the Tor network, and seized the service.
+
+\section{Challenges}
+
+To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008}
+
+\begin{thebibliography}{9}
+
+\bibitem{McCoy2008}
+  Damon McCoy, Kevin Bauer, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker,
+  \emph{\LaTeX: Shining Light in Dark Places: Understanding the Tor Network}.
+  Department of Computer Science and Engineering,
+  University of Washington, Seattle, WA 98195-2969,
+  2008.
+
+\end{thebibliography}
 
 \end{document}
