@@ -27,7 +27,7 @@ Tor achieves anonymity by routing a user's traffic through a circuit of several 
 
 Encryption is a necessary component for privacy within the Tor network. Traffic passing between nodes must be secured from outsiders, and even compromised nodes must not be able to observe the traffic in cleartext. Privacy is also important for traffic outside the network; encrypted connections between the exit node and the target web server must also be achieved. Furthermore, two layers are needed: one for inside the network and one for outside it.
 
-Within the network, nodes talk to each other via the Transport Security Layer (TLS) protocol. When a circuit is built, each pair of nodes within it must first come to an agreement over an encryption key and the specific cipher to use for encryption. There are several mechanisms by which this can be done, all of which use Diffie-Hellman (DH) for key exchange. The most common methods include: TLS_RSA, which rely upon public and private keys generated with RSA; TLS_DHE, ephemeral DH; TLS_ECDH, DH based on elliptic curves, and TLS_ECDHE, ephemeral elliptic curve DH. It should be noted that only TLS_DHE and TLS_ECDHE provide perfect forward secrecy, so it is no surprise that Tor exclusively prefers them. Once encryption keys and the specific cipher (as well as its mode) have been agreed upon, communication of traffic between two nodes can be encrypted and exchanged.
+Within the network, nodes talk to each other via the Transport Security Layer (TLS) protocol. When a circuit is built, each pair of nodes within it must first come to an agreement over an encryption key and the specific cipher to use for encryption. There are several mechanisms by which this can be done, all of which use Diffie-Hellman (DH) for key exchange. The most common methods include: TLS\_RSA, which rely upon public and private keys generated with RSA; TLS\_DHE, ephemeral DH; TLS\_ECDH, DH based on elliptic curves, and TLS\_ECDHE, ephemeral elliptic curve DH. It should be noted that only TLS\_DHE and TLS\_ECDHE provide perfect forward secrecy, so it is no surprise that Tor exclusively prefers them. Once encryption keys and the specific cipher (as well as its mode) have been agreed upon, communication of traffic between two nodes can be encrypted and exchanged.
 
 %http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
 %https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
@@ -43,16 +43,16 @@ In September 2013, Robert Graham of Errata Security analyzed 22,920 incoming con
 
 RSA is an algorithm for public-key cryptography. Its security is based on the infeasibility of factoring the product of two large primes. RSA, like all other public-key cryptography algorithms, relies upon two keys: one public and the other private. The public key may be published and is used for encryption and for verifying digital signatures. The private key is used for decryption, the generation of digital signatures. Thus, through RSA, only the owner of the private key can decrypt incoming messages, and only they can digitally sign outbound messages. This makes RSA extremely powerful for both authenticity and privacy.
 
-To generate the RSA keys, two distinct prime numbers of similar bit-length are chosen at random, \textit{p} and \textit{q}. \textit{n} is computed as the product of \textit{p} and \textit{q}, and it is used as the modulus for both the public and private keys. The bit-length of \textit{n} is the RSA key length. Then let φ(n)\; =\; φ(p) φ(q)\; =\; (p − 1) (q − 1)\; where φ is Euler's totient function, whcih counts the number of positive integers less than or equal to \textit{n} that are relatively prime to \textit{n}. Then \textit{e} is chosen such that \textit{e} and φ(n) are coprime. \textit{d} is also chosen such that it is the multiplicative inverse of e modulo φ(n). The RSA public key then consists of the modulus \textit{n} and the exponent \textit{e}. The private key likewise consists of \textit{n} and the exponent \textit{d}.
+To generate the RSA keys, two distinct prime numbers of similar bit-length are chosen at random, \textit{p} and \textit{q}. \textit{n} is computed as the product of \textit{p} and \textit{q}, and it is used as the modulus for both the public and private keys. The bit-length of \textit{n} is the RSA key length. Then let φ(n)\; =\; φ(p) φ(q)\; =\; (p − 1) (q − 1)\; where φ is Euler's totient function, which counts the number of positive integers less than or equal to \textit{n} that are relatively prime to \textit{n}. Then \textit{e} is chosen such that \textit{e} and φ(n) are coprime. \textit{d} is also chosen such that it is the multiplicative inverse of e modulo φ(n). The RSA public key then consists of the modulus \textit{n} and the exponent \textit{e}. The private key likewise consists of \textit{n} and the exponent \textit{d}.
 
-A message \textit{M} is encrypted by first blocks of length less than \textit{n} using an agreed-upon padding scheme. The ciphertext \textit{c} is then computed as m^e mod n, which can be calculated quickly using the method of exponentiation by squaring. The recipient (the owner of the private key) can then recover the plaintext \textit{M} by computing c^d mod n, and then reversing the padding scheme. The decryption process is often accelerated by optimizations such as the Chinese Remainder Theorem. Furthermore, to sign a message, the owner of the private key first uses an agreed-upon hash function to compute a hash value of the message, raises it to the power of \textit{d} modulo \textit{n} and then sends that in conjuction with \textit{M}. The recipient, who only has access to the public keys, then raises the signature to the power of \textit{e} modulo \textit{n} and compares the result with his hash of the message using the same hash algorithm. If the two match, then he can prove the authenticity and integrity of the message. These two capabilities make RSA an extremely powerful tool for securing authenticity, integrity, and privacy of communication between two parties.
+A message \textit{M} is encrypted by first blocks of length less than \textit{n} using an agreed-upon padding scheme. The ciphertext \textit{c} is then computed as m\^e mod n, which can be calculated quickly using the method of exponentiation by squaring. The recipient (the owner of the private key) can then recover the plaintext \textit{M} by computing c\^d mod n, and then reversing the padding scheme. The decryption process is often accelerated by optimizations such as the Chinese Remainder Theorem. Furthermore, to sign a message, the owner of the private key first uses an agreed-upon hash function to compute a hash value of the message, raises it to the power of \textit{d} modulo \textit{n} and then sends that in conjuction with \textit{M}. The recipient, who only has access to the public keys, then raises the signature to the power of \textit{e} modulo \textit{n} and compares the result with his hash of the message using the same hash algorithm. If the two match, then he can prove the authenticity and integrity of the message. These two capabilities make RSA an extremely powerful tool for securing authenticity, integrity, and privacy of communication between two parties.
 
 \subsubsection{Elliptic-curve}
 
 Elliptic Curve Cryptography (ECC) is an approach to public-key cryptography in which elliptic curves are used instead of RSA. In contrast to RSA, ECC relies upon the infeasiblity of finding the discrete logarithm of a random elliptic curve element with respect to a publicly known base point. This is known as the elliptic curve discrete logarithm problem, or ECDLP.
 
 Elliptic curves over the real number system can be defined through the equation,
-y^2\; =\; x^3\; +\; a x\; +\; b\;
+y\^2\; =\; x\^3\; +\; a x\; +\; b\;
 Where \textit{a} and \textit{b} are real numbers. This formula describes a plane curve through the Euclidean plane, although elliptic curves do exists in other spaces. However, current cryptographic purposes only work with elliptic curves within the context of the real number systems.
 
 A smaller key size is one of the most significant benefits introduced by ECC. Current NIST recommendations state that a key size of 160 bits for ECC offers a similar level of security to 1024 bits of RSA/DH. Likewise, 224 bits for ECC is analogous to 2048 bits of RSA/DH. It should be noted that the required key sizes for ECC increases significantly slower than the key sizes for RSA and Diffie-Hellman increase at a much faster rate than the required key size for ECC. Thus ECC offers more security per increase in key size than for RSA. The smaller key size also directly correlates to an increase in computational efficiency; as the bit size increases, the speed difference between Diffie-Hellman and ECC grows superlinearly.\cite{CaseForECC}
@@ -62,6 +62,18 @@ Tor 2.4.x introduced ECC into its DH key exchange protocols, known as \textit{NT
 \subsection{Authentication}
 
 Authentication...
+
+\section{Features}
+
+\subsection{SOCKS}
+
+The Tor client software offers a Secure Sockets (SOCKS) interface on the system's localhost. SOCKS is different than HTTP proxying, although it uses handshake protocols for authorization purposes, it does not interpret or rewrite any of the subsequent traffic. The Tor Browser Bundle uses this interface as an input to the Tor network, although other applications may also utilize it. SOCKS then multiplexes traffic through the Tor circuit.
+
+\subsection{Hidden services}
+
+%https://en.wikipedia.org/wiki/Core.onion
+%https://en.wikipedia.org/wiki/DuckDuckGo
+%https://en.wikipedia.org/wiki/The_Hidden_Wiki
 
 \section{Adversaries}
 
@@ -80,7 +92,7 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
 % http://homes.cs.washington.edu/~yoshi/papers/Tor/PETS2008_37.pdf
 \bibitem{McCoy2008}
   Damon McCoy, Kevin Bauer, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker,
-  \emph{\LaTeX: Shining Light in Dark Places: Understanding the Tor Network}.
+  \emph{Shining Light in Dark Places: Understanding the Tor Network}.
   Department of Computer Science and Engineering,
   University of Washington, Seattle, WA 98195-2969,
   2008.
@@ -88,13 +100,13 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
 % http://delivery.acm.org/10.1145/1320000/1314336/p11-bauer.pdf?ip=129.123.212.2&id=1314336&acc=ACTIVE%20SERVICE&key=C2716FEBFA981EF14CED21A2601DAAECFD63F9AFA4F38248&CFID=375634674&CFTOKEN=21383502&__acm__=1383519744_1cd525050cafbe9ffe083b269ff783d9
 \bibitem{Bauer2007}
   Kevin Bauer, Damon McCoy, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker
-  \emph{\LaTeX: Low-resource routing attacks against tor}.
+  \emph{Low-resource routing attacks against tor}.
   ACM, 2007
 
 % http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5636000&tag=1
 \bibitem{Chaabane2007}
   Abdelberi Chaabane, Pere Manils, Mohamed Ali Kaafar
-  \emph{\LaTeX: Digging into Anonymous Trafﬁc: a deep analysis of the Tor anonymizing network}.
+  \emph{Digging into Anonymous Trafﬁc: a deep analysis of the Tor anonymizing network}.
   IEEE, 2010
 
 % https://www.torproject.org/docs/faq.html.en
@@ -104,14 +116,14 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
 % http://www.nsa.gov/business/programs/elliptic_curve.shtml
 \bibitem{CaseForECC}
   National Security Agency
-  \emph{\LaTeX: The Case for Elliptic Curve Cryptography}.
+  \emph{The Case for Elliptic Curve Cryptography}.
   NSA, 2009
 
 % http://blog.erratasec.com/2013/09/tor-is-still-dhe-1024-nsa-crackable.html
 % http://thehackernews.com/2013/09/NSA-can-crack-TOR-Encryptio-Snowden-files-.html
 \bibitem{Graham2013}
   Robert Graham
-  \emph{\LaTeX: Tor is still DHE 1024 (NSA crackable)}.
+  \emph{Tor is still DHE 1024 (NSA crackable)}.
   Errata Security, 2013
 
 \end{thebibliography}
