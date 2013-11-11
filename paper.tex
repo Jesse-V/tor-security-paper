@@ -1,5 +1,6 @@
 \documentclass[journal]{IEEEtran}
 \usepackage{graphicx}
+\usepackage{amssymb,amsmath}
 
 \begin{document}
 
@@ -24,15 +25,33 @@ Tor achieves anonymity by routing a user's traffic through a circuit of several 
 
 \subsection{Encryption}
 
-Encryption...
+Encryption is a necessary component for privacy within the Tor network. Traffic passing between nodes must be secured from outsiders, and even compromised nodes must not be able to observe the traffic in cleartext. Privacy is also important for traffic outside the network; encrypted connections between the exit node and the target web server must also be achieved. Furthermore, two layers are needed: one for inside the network and one for outside it.
+
+Within the network, nodes talk to each other via the Transport Security Layer (TLS) protocol. When a circuit is built, each pair of nodes within it must first come to an agreement over an encryption key and the specific cipher to use for encryption. There are several mechanisms by which this can be done, all of which use Diffie-Hellman (DH) for key exchange. The most common methods include: TLS_RSA, which rely upon public and private keys generated with RSA; TLS_DHE, ephemeral DH; TLS_ECDH, DH based on elliptic curves, and TLS_ECDHE, ephemeral elliptic curve DH. It should be noted that only TLS_DHE and TLS_ECDHE provide perfect forward secrecy, so it is no surprise that Tor exclusively prefers them. Once encryption keys and the specific cipher (as well as its mode) have been agreed upon, communication of traffic between two nodes can be encrypted and exchanged.
+
+Tor users typically use the Tor Browser Bundle, (TBB) a custom build of Mozilla Firefox with a focus on security and pricacy. The TBB not only provides special handling of client-side scripts such as Javascript, but also offers the HTTPS Everywhere extension, which uses regular expressions to rewrite web requests into ones that use HTTPS. Thus, if the web server is capable of handling SSL or TLS connections, HTTP communications will be encrypted under them. Like any typical browser, the TBB negotiates with the web server for the cipher and keys required for SSL/TSL, except that this negotiation entirely occurs through the Tor circuit. As previously noted, this information, along with subsequent HTTP data, is encrypted between each node in the circuit. During transmission, each node in the circuit decrypts its layer in turn, until the final node (the exit) passes the data to the target server. The TLS/IP connections remain open, so the returned information likewise travels back up the circuit to the end user.
+
+In September 2013, Robert Graham of Errata Security analyzed 22,920 incoming connections to his exit node and found that 89.9\; of the circuits agreed to use the Advanced Encryption Standard (AES) block cipher in cipher-block chaining (CBC) mode. This is the most common mode for AES, and allows for parallel decryption of the data blocks. The other 10.1\; of the circuits relied upon the Data Encryption Standard (DES) cipher for encryption. Furthermore, 75.7\% of the circuits used elliptic-curve DH, with the remaining 22.3\% relying upon traditional RSA DH.\cite{Graham2013} Both protocols are discussed below.
 
 \subsubsection{RSA}
+%http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
+%https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
+%https://www.ipa.go.jp/security/rfc/RFC5246-ACJA.html
 
 RSA...
+The security of the first is based on the difficulty of factoring the product of two large primes
 
 \subsubsection{Elliptic-curve}
 
-Elliptic-curve...
+Elliptic Curve Cryptography (ECC) is an approach to public-key cryptography in which elliptic curves are used instead of RSA. In contrast to RSA, ECC relies upon the infeasiblity of finding the discrete logarithm of a random elliptic curve element with respect to a publicly known base point. This is known as the elliptic curve discrete logarithm problem, or ECDLP.
+
+Elliptic curves over the real number system can be defined through the equation,
+y^2\; =\; x^3\; +\; a x\; +\; b\;
+Where \textit{a} and \textit{b} are real numbers. This formula describes a plane curve through the Euclidean plane, although elliptic curves do exists in other spaces. However, current cryptographic purposes only work with elliptic curves within the context of the real number systems.
+
+A smaller key size is one of the most significant benefits introduced by ECC. Current NIST recommendations state that a key size of 160 bits for ECC offers a similar level of security to 1024 bits of RSA/DH. Likewise, 224 bits for ECC is analogous to 2048 bits of RSA/DH. It should be noted that the required key sizes for ECC increases significantly slower than the key sizes for RSA and Diffie-Hellman increase at a much faster rate than the required key size for ECC. Thus ECC offers more security per increase in key size than for RSA. The smaller key size also directly correlates to an increase in computational efficiency; as the bit size increases, the speed difference between Diffie-Hellman and ECC grows superlinearly.\cite{CaseForECC}
+
+Tor 2.4.x introduced ECC into its DH key exchange protocols, known as \textit{NTor}.
 
 \subsection{Authentication}
 
@@ -44,8 +63,11 @@ It was recently revealed that the National Security Administration (NSA) has bee
 
 \section{Challenges}
 
+TBB - javascript and cross-scripting
+
 To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008}
 
+% https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
 \begin{thebibliography}{9}
 
 % http://homes.cs.washington.edu/~yoshi/papers/Tor/PETS2008_37.pdf
@@ -71,6 +93,18 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
 % https://www.torproject.org/docs/faq.html.en
 \bibitem{TorFAQ}
   Tor FAQ
+
+% http://www.nsa.gov/business/programs/elliptic_curve.shtml
+\bibitem{CaseForECC}
+  National Security Agency
+  \emph{\LaTeX: The Case for Elliptic Curve Cryptography}.
+  NSA, 2009
+
+% http://blog.erratasec.com/2013/09/tor-is-still-dhe-1024-nsa-crackable.html
+\bibitem{Graham2013}
+  Robert Graham
+  \emph{\LaTeX: Tor is still DHE 1024 (NSA crackable)}.
+  Errata Security, 2013
 
 \end{thebibliography}
 
