@@ -29,17 +29,23 @@ Encryption is a necessary component for privacy within the Tor network. Traffic 
 
 Within the network, nodes talk to each other via the Transport Security Layer (TLS) protocol. When a circuit is built, each pair of nodes within it must first come to an agreement over an encryption key and the specific cipher to use for encryption. There are several mechanisms by which this can be done, all of which use Diffie-Hellman (DH) for key exchange. The most common methods include: TLS_RSA, which rely upon public and private keys generated with RSA; TLS_DHE, ephemeral DH; TLS_ECDH, DH based on elliptic curves, and TLS_ECDHE, ephemeral elliptic curve DH. It should be noted that only TLS_DHE and TLS_ECDHE provide perfect forward secrecy, so it is no surprise that Tor exclusively prefers them. Once encryption keys and the specific cipher (as well as its mode) have been agreed upon, communication of traffic between two nodes can be encrypted and exchanged.
 
+%http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
+%https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
+%https://www.ipa.go.jp/security/rfc/RFC5246-ACJA.html
+%4134 -- 0x0039 TLS_DHE_RSA - the key exchange is an ephemeral Diffie-Hellman: the server dynamically generates a DH public key and sends it to the client; the server also signs what it sends. For DHE_RSA, the server public key must be of type RSA, and its certificate must be appropriate for signatures (the Key Usage extension, if present, must include the digitalSignature flag).
+%5566 -- 0xc013 TLS_ECDHE_RSA - the server sends a dynamically generated (ephemeral?) EC Diffie-Hellman key, and signs it with its own RSA key.
+
 Tor users typically use the Tor Browser Bundle, (TBB) a custom build of Mozilla Firefox with a focus on security and pricacy. The TBB not only provides special handling of client-side scripts such as Javascript, but also offers the HTTPS Everywhere extension, which uses regular expressions to rewrite web requests into ones that use HTTPS. Thus, if the web server is capable of handling SSL or TLS connections, HTTP communications will be encrypted under them. Like any typical browser, the TBB negotiates with the web server for the cipher and keys required for SSL/TSL, except that this negotiation entirely occurs through the Tor circuit. As previously noted, this information, along with subsequent HTTP data, is encrypted between each node in the circuit. During transmission, each node in the circuit decrypts its layer in turn, until the final node (the exit) passes the data to the target server. The TLS/IP connections remain open, so the returned information likewise travels back up the circuit to the end user.
 
 In September 2013, Robert Graham of Errata Security analyzed 22,920 incoming connections to his exit node and found that 89.9\; of the circuits agreed to use the Advanced Encryption Standard (AES) block cipher in cipher-block chaining (CBC) mode. This is the most common mode for AES, and allows for parallel decryption of the data blocks. The other 10.1\; of the circuits relied upon the Data Encryption Standard (DES) cipher for encryption. Furthermore, 75.7\% of the circuits used elliptic-curve DH, with the remaining 22.3\% relying upon traditional RSA DH.\cite{Graham2013} Both protocols are discussed below.
 
 \subsubsection{RSA}
-%http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
-%https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
-%https://www.ipa.go.jp/security/rfc/RFC5246-ACJA.html
 
-RSA...
-The security of the first is based on the difficulty of factoring the product of two large primes
+RSA is an algorithm for public-key cryptography. Its security is based on the infeasibility of factoring the product of two large primes. RSA, like all other public-key cryptography algorithms, relies upon two keys: one public and the other private. The public key may be published and is used for encryption and for verifying digital signatures. The private key is used for decryption, the generation of digital signatures. Thus, through RSA, only the owner of the private key can decrypt incoming messages, and only they can digitally sign outbound messages. This makes RSA extremely powerful for both authenticity and privacy.
+
+To generate the RSA keys, two distinct prime numbers of similar bit-length are chosen at random, \textit{p} and \textit{q}. \textit{n} is computed as the product of \textit{p} and \textit{q}, and it is used as the modulus for both the public and private keys. The bit-length of \textit{n} is the RSA key length. Then let φ(n)\; =\; φ(p) φ(q)\; =\; (p − 1) (q − 1)\; where φ is Euler's totient function, whcih counts the number of positive integers less than or equal to \textit{n} that are relatively prime to \textit{n}. Then \textit{e} is chosen such that \textit{e} and φ(n) are coprime. \textit{d} is also chosen such that it is the multiplicative inverse of e modulo φ(n). The RSA public key then consists of the modulus \textit{n} and the exponent \textit{e}. The private key likewise consists of \textit{n} and the exponent \textit{d}.
+
+A message \textit{M} is encrypted by first blocks of length less than \textit{n} using an agreed-upon padding scheme. The ciphertext \textit{c} is then computed as m^e mod n, which can be calculated quickly using the method of exponentiation by squaring. The recipient (the owner of the private key) can then recover the plaintext \textit{M} by computing c^d mod n, and then reversing the padding scheme. The decryption process is often accelerated by optimizations such as the Chinese Remainder Theorem. Furthermore, to sign a message, the owner of the private key first uses an agreed-upon hash function to compute a hash value of the message, raises it to the power of \textit{d} modulo \textit{n} and then sends that in conjuction with \textit{M}. The recipient, who only has access to the public keys, then raises the signature to the power of \textit{e} modulo \textit{n} and compares the result with his hash of the message using the same hash algorithm. If the two match, then he can prove the authenticity and integrity of the message. These two capabilities make RSA an extremely powerful tool for securing authenticity, integrity, and privacy of communication between two parties.
 
 \subsubsection{Elliptic-curve}
 
@@ -64,6 +70,7 @@ It was recently revealed that the National Security Administration (NSA) has bee
 \section{Challenges}
 
 TBB - javascript and cross-scripting
+Does the web server support SSL/TLS?
 
 To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008}
 
@@ -101,6 +108,7 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
   NSA, 2009
 
 % http://blog.erratasec.com/2013/09/tor-is-still-dhe-1024-nsa-crackable.html
+% http://thehackernews.com/2013/09/NSA-can-crack-TOR-Encryptio-Snowden-files-.html
 \bibitem{Graham2013}
   Robert Graham
   \emph{\LaTeX: Tor is still DHE 1024 (NSA crackable)}.
