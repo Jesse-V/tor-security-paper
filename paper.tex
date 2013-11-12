@@ -58,15 +58,15 @@ Encryption is a necessary component for privacy within the Tor network. Traffic 
 
 Within the network, nodes talk to each other via the Transport Security Layer (TLS) protocol. When a circuit is built, each pair of nodes within it must first come to an agreement over an encryption key and the specific cipher to use for encryption. There are several mechanisms by which this can be done, all of which use Diffie-Hellman (DH) for key exchange. The most common methods include: TLS\_RSA, which rely upon public and private keys generated with RSA; TLS\_DHE, ephemeral DH; TLS\_ECDH, DH based on elliptic curves, and TLS\_ECDHE, ephemeral elliptic curve DH. It should be noted that only TLS\_DHE and TLS\_ECDHE provide perfect forward secrecy, so it is no surprise that Tor exclusively prefers them. Once encryption keys and the specific cipher (as well as its mode) have been agreed upon, communication of traffic between two nodes can be encrypted and exchanged.
 
-%http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
-%https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
-%https://www.ipa.go.jp/security/rfc/RFC5246-ACJA.html
-%4134 -- 0x0039 TLS_DHE_RSA - the key exchange is an ephemeral Diffie-Hellman: the server dynamically generates a DH public key and sends it to the client; the server also signs what it sends. For DHE_RSA, the server public key must be of type RSA, and its certificate must be appropriate for signatures (the Key Usage extension, if present, must include the digitalSignature flag).
-%5566 -- 0xc013 TLS_ECDHE_RSA - the server sends a dynamically generated (ephemeral?) EC Diffie-Hellman key, and signs it with its own RSA key.
+% http://security.stackexchange.com/questions/8343/what-key-exchange-mechanism-should-be-used-in-tls
+% https://en.wikipedia.org/wiki/Comparison_of_TLS_implementations
+% https://www.ipa.go.jp/security/rfc/RFC5246-ACJA.html
+% 4134 -- 0x0039 TLS_DHE_RSA - the key exchange is an ephemeral Diffie-Hellman: the server dynamically generates a DH public key and sends it to the client; the server also signs what it sends. For DHE_RSA, the server public key must be of type RSA, and its certificate must be appropriate for signatures (the Key Usage extension, if present, must include the digitalSignature flag).
+% 5566 -- 0xc013 TLS_ECDHE_RSA - the server sends a dynamically generated (ephemeral?) EC Diffie-Hellman key, and signs it with its own RSA key.
 
 Tor users typically use the Tor Browser Bundle, (TBB) a custom build of Mozilla Firefox with a focus on security and pricacy. The TBB not only provides special handling of client-side scripts such as Javascript, but also offers the HTTPS Everywhere extension, which uses regular expressions to rewrite web requests into ones that use HTTPS. Thus, if the web server is capable of handling SSL or TLS connections, HTTP communications will be encrypted under them. Like any typical browser, the TBB negotiates with the web server for the cipher and keys required for SSL/TSL, except that this negotiation entirely occurs through the Tor circuit. As previously noted, this information, along with subsequent HTTP data, is encrypted between each node in the circuit. During transmission, each node in the circuit decrypts its layer in turn, until the final node (the exit) passes the data to the target server. The TLS/IP connections remain open, so the returned information likewise travels back up the circuit to the end user.
 
-In September 2013, Robert Graham of Errata Security analyzed 22,920 incoming connections to his exit node and found that 89.9\% of the circuits agreed to use the Advanced Encryption Standard (AES) block cipher in cipher-block chaining (CBC) mode. This is the most common mode for AES, and allows for parallel decryption of the data blocks. The other 10.1\% of the circuits relied upon the Data Encryption Standard (DES) cipher for encryption. Furthermore, 75.7\% of the circuits used elliptic-curve DH, with the remaining 22.3\% relying upon traditional RSA DH.\cite{Graham2013} Both protocols are discussed below.
+In September 2013, Robert Graham of Errata Security analyzed 22,920 incoming connections to his exit node and found that 89.9\% of the circuits agreed to use the Advanced Encryption Standard (AES) block cipher in cipher-block chaining (CBC) mode. This is the most common mode for AES, and allows for parallel decryption of the data blocks. The other 10.1\% of the circuits relied upon three rounds of the Data Encryption Standard (triple DES) cipher for encryption. Furthermore, 75.7\% of the circuits used elliptic-curve DH, with the remaining 22.3\% relying upon traditional RSA DH.\cite{Graham2013} Both protocols are discussed below.
 
 \subsubsection{RSA}
 
@@ -78,6 +78,8 @@ A message \textit{M} is encrypted by first blocks of length less than \textit{n}
 
 Furthermore, to sign a message, the owner of the private key first uses an agreed-upon hash function to compute a hash value of the message, raises it to the power of \textit{d} modulo \textit{n} and then sends that in conjuction with \textit{M}. The recipient, who only has access to the public keys, then raises the signature to the power of \textit{e} modulo \textit{n} and compares the result with his hash of the message using the same hash algorithm. If the two match, then he can prove the authenticity and integrity of the message. These two capabilities make RSA an extremely powerful tool for securing authenticity, integrity, and privacy of communication between two parties.
 
+Tor version 2.3.x and previous rely upon TLS\_DHE for the key exchange mechanism. Per the TLS specification, the server generates a Diffie-Hellman public key and sends it to the client. The server also uses its RSA private key to sign everything that it sends to the client during the DH exchange. The client can then confirm the digital signature to verify the authenticity of the communication from the Tor relay.
+
 \subsubsection{Elliptic-curve}
 
 Elliptic Curve Cryptography (ECC) is an approach to public-key cryptography in which elliptic curves are used instead of RSA. In contrast to RSA, ECC relies upon the infeasiblity of finding the discrete logarithm of a random elliptic curve element with respect to a publicly known base point. This is known as the elliptic curve discrete logarithm problem, or ECDLP.
@@ -86,9 +88,14 @@ Elliptic curves over the real number system can be defined through the equation,
 
 A smaller key size is one of the most significant benefits introduced by ECC. Current NIST recommendations state that a key size of 160 bits for ECC offers a similar level of security to 1024 bits of RSA/DH. Likewise, 224 bits for ECC is analogous to 2048 bits of RSA/DH. It should be noted that the required key sizes for ECC increases significantly slower than the key sizes for RSA and Diffie-Hellman increase at a much faster rate than the required key size for ECC. Thus ECC offers more security per increase in key size than for RSA. The smaller key size also directly correlates to an increase in computational efficiency; as the bit size increases, the speed difference between Diffie-Hellman and ECC grows superlinearly.\cite{CaseForECC}
 
-Tor 2.4.x introduced ECC into its DH key exchange protocols, known as \textit{NTor}.
+Tor 2.4.x introduced TLS\_ECDHE, which uses an elliptic-curve varient of the Diffie-Hellman key exchange. Like TLS\_DHE, the server uses its RSA key to digitally signs communication to the client. The TLS\_ECDHE protocol is believed to be more secure than TLS\_DHE.
 
 \subsubsection{Symmetric-key}
+
+% http://www.isg.rhul.ac.uk/tls/
+% https://community.qualys.com/blogs/securitylabs/2013/03/19/rc4-in-tls-is-broken-now-what
+
+As previously noted, in his analysis of the incoming handshakes to his exit node, Robert Graham found that almost 90\% of the circuits agreed on the AES cipher, while the remainder used triple DES. For communication to web servers, RC4 remains the most popular cipher.
 
 \subsection{Authentication}
 
