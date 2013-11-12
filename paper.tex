@@ -5,13 +5,13 @@
 \begin{document}
 
 \title{The Tor Network - Strengths and Weaknesses \\ \Large Computer Security 1 - CS5460 \\ \LaTeX{}}
-\author{Jesse Victors}
+\author{Jesse Victors \\ November 2013}
 
 \maketitle
 
 \section{Introduction}
 
-The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tor routes TCP traffic through a worldwide and volunteer network of over four thousand relays. Its encryption, authentication, and routing protocols are designed to make it exceptionally difficult for an adversary to identify an end user or reveal their traffic.
+The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tour routes encrypted TCP traffic through a worldwide network of over four thousand relays run by volunteers across the world. Tor's encryption, authentication, and routing protocols are designed to make it infeasible for any adversary to identify an end user or reveal their traffic. Throughout its history, various organizations and governments have attempted to block, tap, or crack the Tor network. It was recently revealed that the US National Security Agency has attempted to penetrate the Tor network. Tor is also currently undergoing a transition from RSA-based to elliptic-curve-based TLS. In light of these attacks, Tor's popularity, and the protocol transition, a question that must be asked both by its users and by outsiders is: how secure is Tor? How does it work, what does it provide, and what are its weaknesses. In this paper, I address these questions.
 
 \section{Design}
 
@@ -19,9 +19,39 @@ Tor provides an anonymity and privacy layer by relaying all end-user TCP traffic
 
 \subsection{Routing}
 
-Routing information is distributed by a set of authoritative directory servers.\cite{McCoy2008}
+In traditional Internet connections, the client communicates directly with the server. In this model, an eavesdropper can often reveal both the identity of the end user and their activities. Direct encrypted connections do not hide IP headers, which expose source and destination addresses and the size of the payload. In the face of adversaries with sophisticated traffic analysis tools, such information can be very revealing for someone who wishes to hide their activities altogether.
 
-Tor achieves anonymity by routing a user's traffic through a circuit of several random relays, wherein each relay is only capable of decrypting the address of the next relay in line. Hence, even compromised relays will be unable to deduce what the traffic is or where they came from, and an outsider is faced with multiple layers of public-key -- either RSA or elliptic curve -- encryption on top of TLS protocols. Currently, Tor is one of the most secure tools to use against network surveillance, traffic analysis, and to bypassing information censorship.
+Tor combats this by routing end user traffic through a randomized path through the network of relays. To construct this circuit, the Tor client software first queries a trusted directory server, which return a list of Tor nodes. This is illustrated in Figure 1.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{8 cm}
+    \includegraphics[width=80mm]{resources/circuit-building-1.png}
+    \caption{The user's software first downloads a directory list of Tor relays. This information is later used to construct a circuit through the network.\cite{McCoy2008}}
+\end{minipage}
+\end{figure}
+
+The second step involves choosing three nodes to use and carefully constructing an encrypted path between them. The circuit is extended one hop at a time such that no single relay ever knows the complete path. The client negotiates a separate set of encryption keys for each hop along the circuit to ensure that each hop cannot trace these connections as they pass through, as seen in Figure 2.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{8 cm}
+    \includegraphics[width=80mm]{resources/circuit-building-2.png}
+    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.}
+\end{minipage}
+\end{figure}
+
+Following the complete establishment of a circuit, TCP traffic can be routed through it. As each relay sees no more than one hop in the circuit, neither an eavesdropper nor a compromised relay can use traffic analysis to link the connection's source and destination. Tor further obfuscates user traffic by changing the circuit path every ten minutes,\cite{McCoy2008} as shown in Figure 3.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{8 cm}
+  \includegraphics[width=80mm]{resources/circuit-building-3.png}
+  \caption{A Tor circuit is changed periodically, essentially providing a new identity to the end user.}
+\end{minipage}
+\end{figure}
+
+It should be noted that traffic exiting the Tor network is often (but not always) encrypted on its way to the source. An outsider is therefore faced with up to four layers of TLS encryption. Currently, Tor is one of the most secure tools to use against network surveillance, traffic analysis, and to bypassing information censorship.
 
 \subsection{Encryption}
 
@@ -71,9 +101,10 @@ The Tor client software offers a Secure Sockets (SOCKS) interface on the system'
 
 \subsection{Hidden services}
 
-%https://en.wikipedia.org/wiki/Core.onion
-%https://en.wikipedia.org/wiki/DuckDuckGo
-%https://en.wikipedia.org/wiki/The_Hidden_Wiki
+% https://en.wikipedia.org/wiki/Core.onion
+% https://en.wikipedia.org/wiki/DuckDuckGo
+% https://en.wikipedia.org/wiki/The_Hidden_Wiki
+% https://www.torproject.org/docs/hidden-services.html.en
 
 \section{Adversaries}
 
