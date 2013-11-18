@@ -26,7 +26,7 @@ Tor combats this by routing end user traffic through a randomized path through t
 \centering
 \begin{minipage}{8 cm}
     \includegraphics[width=80mm]{resources/circuit-building-1.png}
-    \caption{The user's software first downloads a directory list of Tor relays. This information is later used to construct a circuit through the network.\cite{McCoy2008}}
+    \caption{The user's software first downloads a directory list of Tor relays. This information is later used to construct a circuit through the network.\cite{McCoy2008}\cite{TorOverview}}
 \end{minipage}
 \end{figure}
 
@@ -36,17 +36,17 @@ The second step involves choosing three nodes to use and carefully constructing 
 \centering
 \begin{minipage}{8 cm}
     \includegraphics[width=80mm]{resources/circuit-building-2.png}
-    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.}
+    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.\cite{TorOverview}}
 \end{minipage}
 \end{figure}
 
-Following the complete establishment of a circuit, TCP traffic can be routed through it. As each relay sees no more than one hop in the circuit, neither an eavesdropper nor a compromised relay can use traffic analysis to link the connection's source and destination. Tor further obfuscates user traffic by changing the circuit path every ten minutes,\cite{McCoy2008} as shown in Figure 3.
+Following the complete establishment of a circuit, the Tor client software then offers a Secure Sockets (SOCKS) interface which multiplexes TCP traffic through Tor. As each relay sees no more than one hop in the circuit, neither an eavesdropper nor a compromised relay can use traffic analysis to link the connection's source and destination. Tor further obfuscates user traffic by changing the circuit path every ten minutes,\cite{McCoy2008} as shown in Figure 3.
 
 \begin{figure}[htbp]
 \centering
 \begin{minipage}{8 cm}
   \includegraphics[width=80mm]{resources/circuit-building-3.png}
-  \caption{A Tor circuit is changed periodically, essentially providing a new identity to the end user.}
+  \caption{A Tor circuit is changed periodically, essentially providing a new identity to the end user.\cite{TorOverview}}
 \end{minipage}
 \end{figure}
 
@@ -88,42 +88,79 @@ Elliptic curves over the real number system can be defined through the equation,
 
 A smaller key size is one of the most significant benefits introduced by ECC. Current NIST recommendations state that a key size of 160 bits for ECC offers a similar level of security to 1024 bits of RSA/DH. Likewise, 224 bits for ECC is analogous to 2048 bits of RSA/DH. It should be noted that the required key sizes for ECC increases significantly slower than the key sizes for RSA and Diffie-Hellman increase at a much faster rate than the required key size for ECC. Thus ECC offers more security per increase in key size than for RSA. The smaller key size also directly correlates to an increase in computational efficiency; as the bit size increases, the speed difference between Diffie-Hellman and ECC grows superlinearly.\cite{CaseForECC}
 
-Tor 2.4.x introduced TLS\_ECDHE, which uses an elliptic-curve varient of the Diffie-Hellman key exchange. Like TLS\_DHE, the server uses its RSA key to digitally signs communication to the client. The TLS\_ECDHE protocol is believed to be more secure than TLS\_DHE.
+Tor 2.4.x introduced TLS\_ECDHE, which uses an elliptic-curve variant of the Diffie-Hellman key exchange. Like TLS\_DHE, the server uses its RSA key to digitally signs communication to the client. The TLS\_ECDHE protocol is believed to be more secure than TLS\_DHE.
 
 \subsubsection{Symmetric-key}
 
 % http://www.isg.rhul.ac.uk/tls/
 % https://community.qualys.com/blogs/securitylabs/2013/03/19/rc4-in-tls-is-broken-now-what
 
-As previously noted, in his analysis of the incoming handshakes to his exit node, Robert Graham found that almost 90\% of the circuits agreed on the AES cipher, while the remainder used triple DES. For communication to web servers, RC4 remains the most popular cipher.
+Once the SSL/TLS handshake completes, both parties use the generated session key and turn to symmetric-key encryption for hiding of data.
 
-\subsection{Authentication}
+Data Encryption Standard (DES) is a block cipher introduced in 1977 by IBM. It was considered insecure in 1998 when the DES Challenges demonstrated that it was feasible to brute-force DES ciphertexts in a matter of hours using custom hardware. This weakness was partially mitigated by the introduction of triple DES (3DES) in the same year, where three rounds of DES were performed using three separate 56-bit keys. However, 3DES was found to be susceptible to meet-in-the-middle, chosen-plaintext, and known-plaintext attacks, so despite using a 168-bit key, 3DES only provides 80 bits of security.\cite{NIST2007} 3DES is still used on the web and by older Microsoft products, but has been largely superseded by other algorithms.
 
-Authentication...
+Advanced Encryption Standard (AES) is a block cipher introduced in 2001. It supersedes 3DES, and is now used extensively worldwide. AES became the recommended cipher for protecting classified documents for the US government in 2003, and side-channel attacks on specific implementations were the only known vulnerabilities up until mid 2009. To date, the most successful public attacks require $ 2^126.1 $ operations to recover a 128-bit key,\cite{Nikolic2009} and related-key attacks can break AES-192 and AES-256 in $ 2^176 $ and $ 2^99.5 $ operations,\cite{Bogdanov2011} respectively.
 
-\section{Features}
+RC4 is a stream cipher invented in 1987 and sunsequently leaked in 1994. The RC4 algorithm is simple and extremely fast in software, and is now the most widely used software stream cipher, most notably in protocols such as TLS and WEP. Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
 
-\subsection{SOCKS}
+Robert Graham's analysis of the incoming handshakes to his exit node revealed that almost 90\% of the circuits agreed on the AES cipher, while the remainder used triple DES. Both AES and triple DES (3DES) are block ciphers. For communication to web servers, RC4 remained the most popular algorithm.
 
-The Tor client software offers a Secure Sockets (SOCKS) interface on the system's localhost. SOCKS is different than HTTP proxying, although it uses handshake protocols for authorization purposes, it does not interpret or rewrite any of the subsequent traffic. The Tor Browser Bundle uses this interface as an input to the Tor network, although other applications may also utilize it. SOCKS then multiplexes traffic through the Tor circuit.
+\section{Attacks and Defenses}
 
-\subsection{Hidden services}
+Attacks from adversaries can be classified into several categories: attack on the user, attacks on their computer, attacks on the Tor network itself, attacks on the exit's connection across the Internet, and attacks on the server. Tor's developers have implemented or recommended various defenses against common attacks on each of these layers.
 
-% https://en.wikipedia.org/wiki/Core.onion
-% https://en.wikipedia.org/wiki/DuckDuckGo
-% https://en.wikipedia.org/wiki/The_Hidden_Wiki
-% https://www.torproject.org/docs/hidden-services.html.en
+\subsection{Weaknesses introduced by the user}
+
+Users on Tor must take precautions when using Tor. Although Tor's onion routing provides privacy and anonymity to their traffic, users can identify themselves by revealing their real name or information about where they are. If they build an electronic trail that can be used to deanonymize them, the use of Tor is rendered useless by their carelessness.
+
+
+
+\subsection{Attacks on user's computer}
+
+Tor users can also be revealed or have their privacy compromised by their own workstations. If their computer contains spyware, backdoors, or other malicious software that can be used to identify them or their traffic, then a user may be tricked into believing that they are anonymous when in fact they are not.
+
+Javascript vs NoScript, TBB - javascript and cross-scripting
+
+
+\subsection{Attacks on the Tor network}
+
+The relay chosen for the first hop in the circuit has knowledge of the user's IP address, can thus deanonymize them in that respect. Although this first relay does not know the rest of the circuit and cannot deduce the final traffic exiting Tor, the knowledge of the user's IP can be problematic if the relay is operated by an attacker. With this information, an adversary would be able to trace users or deny them entry into the Tor network.
+
+Tor combats this through \textit{entry guards}. The Tor client software chooses three relays out of the pool and then exclusively uses one of these chosen relays as the first hop of the circuit. This protects the end user against the \"predecessor attack\", wherein the attacker can preform end-to-end correlation and deanonymize the user if compromised nodes are chosen for the first and last hop in the circuit,\cite{Wright2004} and they make it more difficult for an attacker to add some relays to the Tor network and immediately begin tracing users. As of the time of this writing, there are 4,737 relays on the Tor network, so the chances of a client including a compromised node in its selection pool is 4,737 choose three without replacement, or 0.06334\%.
+
+Tor is susceptible to timing attacks. To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} Therefore, if an adversary controls both the first hop and the final hop in the Tor circuit then they can use statistical timing tests to become reasonably confident in identifying the activities of the end-user. For example, they could observe 198.51.100.37 connecting to their first node
+
+
+
+\subsection{Compromising the exit node}
+
+Exit nodes are valuable on the Tor network due to their necessity for the final hop of the circuit and because they are rarer than traditional relays. Exit node operators typically have to deal with ISP complaints for any nefarious Internet activities performed by the users at the other end of the circuit. Although these complaints can be largely combated by implementing a reduced exit policy, there are 912 exit notes at the time of this writing, 19.74\% of the total 4,737 relays on the Tor network. It is entirely possible than an adversay could control an exit node, giving them insight into the traffic leaving Tor. If the traffic is encrypted, the exit node could still see the DNS lookup and HTTP headers. If encryption is not implemented, all traffic would thus be available for inspection.
+
+In September 2007, Swedish security consultant Dan Egerstad operated five exit nodes and monitored their traffic. Over the course of his experiment, he obtained the usernames and passwords for over 100 email accounts, read the correspondence from embassies in Australia, Japan, Iran, India, and Russia, along with communication between dignitaries including the Indian ambassador to China, various politicians in Hong Kong, workers in the Dalai Lama's liaison office, and several human-rights groups in Hong Kong. He also obtained sensitive spreadsheets and documents about military and political activities. Egerstad's analysis further revealed that approximately 95\% of the traffic flowing over his nodes was not encrypted.\cite{Wired2007}
+
+An adversary could operate one or more exit nodes, as Egerstad did, or they could wiretap the exit's traffic and gain access to the traffic that way, perhaps without the knowledge of the exit operator. While the exit has no knowledge of the entire circuit and thus cannot deduce the origin of the traffic, the unencrypted traffic can be quite revealing and problematic, as Egerstad demonstrated. The primary way that Tor combats this through encryption. The Tor Browser Bundle comes with the HTTPS Everywhere, which prefers the use of HTTPS when connecting to web servers. Most email servers also support SSL/TLS, and users can also manually encrypt their documents or emails using PGP. Although Tor has no way of enforcing this final layer of encryption, it highly recommends it and places notices about this on many places on its website.
+
+\subsection{Attacks on the web server}
+
+The web server can also be a point of failure for the privacy and anonymity of the end user.
+
+Does the web server support SSL/TLS? The adversary could fake the server.
 
 \section{Adversaries}
 
+% https://blog.torproject.org/blog/improving-tors-anonymity-changing-guard-parameters
+
 It was recently revealed that the National Security Administration (NSA) has been targeting Tor, albeit with marginal success in breaking the anonymity and privacy of its users. However, in early October, the FBI successfully identified and arrested the owner of the Silk Road, a black market operating as a hidden service within the Tor network, and seized the service.
 
-\section{Challenges}
 
-TBB - javascript and cross-scripting
-Does the web server support SSL/TLS?
 
-To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008}
+\section{Analysis}
+
+
+
+\section{Conclusion}
+
+
 
 % https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
 \begin{thebibliography}{9}
@@ -142,11 +179,21 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
   \emph{Low-resource routing attacks against tor}.
   ACM, 2007
 
+% http://freehaven.net/anonbib/#Wright:2004
+\bibitem{Wright2004}
+  Matthew Wright, Micah Adler, Brian Neil Levine, and Clay Shields
+  \emph{The Predecessor Attack: An Analysis of a Threat to Anonymous Communications Systems}.
+  ACM Transactions on Information and System Security (TISSEC) 4(7), November 2004, pages 489-522
+
 % http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5636000&tag=1
 \bibitem{Chaabane2007}
   Abdelberi Chaabane, Pere Manils, Mohamed Ali Kaafar
   \emph{Digging into Anonymous Trafﬁc: a deep analysis of the Tor anonymizing network}.
   IEEE, 2010
+
+% https://www.torproject.org/about/overview.html.en
+\bibitem{TorOverview}
+  Overview of Tor
 
 % https://www.torproject.org/docs/faq.html.en
 \bibitem{TorFAQ}
@@ -157,6 +204,31 @@ To achieve its low-latency objective, Tor does not explicitly re-order or delay 
   National Security Agency
   \emph{The Case for Elliptic Curve Cryptography}.
   NSA, 2009
+
+% http://www.wired.com/politics/security/news/2007/09/embassy_hacks
+% http://www.wired.com/threatlevel/2007/08/embassy-e-mail/
+\bibitem{Wired2007}
+  Kim Zetter
+  \emph{Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's Paradise}
+  Wired, 2007
+
+% http://csrc.nist.gov/publications/nistpubs/800-57/sp800-57-Part1-revised2_Mar08-2007.pdf
+\bibitem{NIST2007}
+  Elaine Barker, William Barker, William Burr, William Polk, and Miles Smid
+  \emph{Recommendation for Key Management, Part 1: General (Revised)}
+  National Institute of Standards and Technology, March 2007
+
+% http://link.springer.com/chapter/10.1007%2F978-3-642-03356-8_14
+\bibitem{Nikolic2009}
+  Nikolić, Ivica
+  \emph{Distinguisher and Related-Key Attack on the Full AES-256}
+  Advances in Cryptology, 2009
+
+% https://research.microsoft.com/en-us/projects/cryptanalysis/aesbc.pdf
+\bibitem{Bogdanov2011}
+  Andrey Bogdanov, Dmitry Khovratovich, and Christian Rechberger
+  \emph{Biclique Cryptanalysis of the Full AES}
+   Microsoft Research Redmond, 2011
 
 % http://blog.erratasec.com/2013/09/tor-is-still-dhe-1024-nsa-crackable.html
 % http://thehackernews.com/2013/09/NSA-can-crack-TOR-Encryptio-Snowden-files-.html
