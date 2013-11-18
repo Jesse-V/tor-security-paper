@@ -103,11 +103,11 @@ Advanced Encryption Standard (AES) is a block cipher introduced in 2001. It supe
 
 RC4 is a stream cipher invented in 1987 and sunsequently leaked in 1994. The RC4 algorithm is simple and extremely fast in software, and is now the most widely used software stream cipher, most notably in protocols such as TLS and WEP. Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
 
-Robert Graham's analysis of the incoming handshakes to his exit node revealed that almost 90\% of the circuits agreed on the AES cipher, while the remainder used triple DES. Both AES and triple DES (3DES) are block ciphers. For communication to web servers, RC4 remained the most popular algorithm.
+Robert Graham's analysis of the incoming handshakes to his exit node revealed that almost 90\% of the circuits agreed on the AES cipher, while the remainder used 3DES. For communication to web servers, RC4 remained the most popular algorithm.
 
 \section{Attacks and Defenses}
 
-Attacks from adversaries can be classified into several categories: attack on the user, attacks on their computer, attacks on the Tor network itself, attacks on the exit's connection across the Internet, and attacks on the server. Tor's developers have implemented or recommended various defenses against common attacks on each of these layers.
+Attacks from adversaries against Tor can be classified into several categories: attack on the user, attacks on their computer, attacks on the Tor network itself, attacks on the exit's connection across the Internet, and attacks on the server. Tor's developers have implemented or recommended various defenses against common attacks on each of these layers.
 
 \subsection{Weaknesses introduced by the user}
 
@@ -165,19 +165,6 @@ It was recently revealed that the National Security Administration (NSA) has bee
 % https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
 \begin{thebibliography}{9}
 
-% http://homes.cs.washington.edu/~yoshi/papers/Tor/PETS2008_37.pdf
-\bibitem{McCoy2008}
-  Damon McCoy, Kevin Bauer, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker,
-  \emph{Shining Light in Dark Places: Understanding the Tor Network}.
-  Department of Computer Science and Engineering,
-  University of Washington, Seattle, WA 98195-2969,
-  2008.
-
-% http://delivery.acm.org/10.1145/1320000/1314336/p11-bauer.pdf?ip=129.123.212.2&id=1314336&acc=ACTIVE%20SERVICE&key=C2716FEBFA981EF14CED21A2601DAAECFD63F9AFA4F38248&CFID=375634674&CFTOKEN=21383502&__acm__=1383519744_1cd525050cafbe9ffe083b269ff783d9
-\bibitem{Bauer2007}
-  Kevin Bauer, Damon McCoy, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker
-  \emph{Low-resource routing attacks against tor}.
-  ACM, 2007
 
 % http://freehaven.net/anonbib/#Wright:2004
 \bibitem{Wright2004}
@@ -190,20 +177,6 @@ It was recently revealed that the National Security Administration (NSA) has bee
   Abdelberi Chaabane, Pere Manils, Mohamed Ali Kaafar
   \emph{Digging into Anonymous Trafﬁc: a deep analysis of the Tor anonymizing network}.
   IEEE, 2010
-
-% https://www.torproject.org/about/overview.html.en
-\bibitem{TorOverview}
-  Overview of Tor
-
-% https://www.torproject.org/docs/faq.html.en
-\bibitem{TorFAQ}
-  Tor FAQ
-
-% http://www.nsa.gov/business/programs/elliptic_curve.shtml
-\bibitem{CaseForECC}
-  National Security Agency
-  \emph{The Case for Elliptic Curve Cryptography}.
-  NSA, 2009
 
 % http://www.wired.com/politics/security/news/2007/09/embassy_hacks
 % http://www.wired.com/threatlevel/2007/08/embassy-e-mail/
@@ -218,17 +191,58 @@ It was recently revealed that the National Security Administration (NSA) has bee
   \emph{Recommendation for Key Management, Part 1: General (Revised)}
   National Institute of Standards and Technology, March 2007
 
+% http://delivery.acm.org/10.1145/1320000/1314336/p11-bauer.pdf?ip=129.123.212.2&id=1314336&acc=ACTIVE%20SERVICE&key=C2716FEBFA981EF14CED21A2601DAAECFD63F9AFA4F38248&CFID=375634674&CFTOKEN=21383502&__acm__=1383519744_1cd525050cafbe9ffe083b269ff783d9
+\bibitem{Bauer2007}
+  Kevin Bauer, Damon McCoy, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker
+  \emph{Low-resource routing attacks against tor}.
+  ACM, 2007
+
+% http://homes.cs.washington.edu/~yoshi/papers/Tor/PETS2008_37.pdf
+\bibitem{McCoy2008}
+  Damon McCoy, Kevin Bauer, Dirk Grunwald, Tadayoshi Kohno, Douglas Sicker,
+  \emph{Shining Light in Dark Places: Understanding the Tor Network}.
+  Department of Computer Science and Engineering,
+  University of Washington, Seattle, WA 98195-2969,
+  2008.
+
 % http://link.springer.com/chapter/10.1007%2F978-3-642-03356-8_14
 \bibitem{Nikolic2009}
   Nikolić, Ivica
   \emph{Distinguisher and Related-Key Attack on the Full AES-256}
   Advances in Cryptology, 2009
 
+% TODO: use
+% http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4797313
+\bibitem{Xin2009}
+  Liu Xin, Wang Neng
+  \emph{Design Improvement for Tor Against Low-Cost Traffic Attack and Low-Resource Routing Attack}
+  2009 International Conference on Communications and Mobile Computing
+
+% http://www.nsa.gov/business/programs/elliptic_curve.shtml
+\bibitem{CaseForECC}
+  National Security Agency
+  \emph{The Case for Elliptic Curve Cryptography}.
+  NSA, 2009
+
 % https://research.microsoft.com/en-us/projects/cryptanalysis/aesbc.pdf
 \bibitem{Bogdanov2011}
   Andrey Bogdanov, Dmitry Khovratovich, and Christian Rechberger
   \emph{Biclique Cryptanalysis of the Full AES}
-   Microsoft Research Redmond, 2011
+  Microsoft Research Redmond, 2011
+
+% TODO: use
+% http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=5962653
+\bibitem{Ling2011}
+  Zhen Ling
+  \emph{Equal-Sized Cells Mean Equal-Sized Packets in Tor?}
+  IEE International Conference on Communications, 2011
+
+% TODO: use
+% http://ac.els-cdn.com/S1389128612003799/1-s2.0-S1389128612003799-main.pdf?_tid=c6751d5e-5009-11e3-9ab2-00000aab0f26&acdnat=1384749046_78b8af8ba2cb2c0a2672840e0c7c5da1
+\bibitem{Ling2012}
+  Zhen Ling, Junzhou Luo, Wei Yu, Xinwen Fuc, Weijia Jia, Wei Zhao
+  \emph{Protocol-level attacks against Tor}
+  Computer Networks, 2012
 
 % http://blog.erratasec.com/2013/09/tor-is-still-dhe-1024-nsa-crackable.html
 % http://thehackernews.com/2013/09/NSA-can-crack-TOR-Encryptio-Snowden-files-.html
@@ -236,6 +250,14 @@ It was recently revealed that the National Security Administration (NSA) has bee
   Robert Graham
   \emph{Tor is still DHE 1024 (NSA crackable)}.
   Errata Security, 2013
+
+% https://www.torproject.org/about/overview.html.en
+\bibitem{TorOverview}
+  Overview of Tor
+
+% https://www.torproject.org/docs/faq.html.en
+\bibitem{TorFAQ}
+  Tor FAQ
 
 \end{thebibliography}
 
