@@ -113,14 +113,13 @@ Attacks from adversaries against Tor can be classified into several categories: 
 
 Users on Tor must take precautions when using Tor. Although Tor's onion routing provides privacy and anonymity to their traffic, users can identify themselves by revealing their real name or information about where they are. If they build an electronic trail that can be used to deanonymize them, the use of Tor is rendered useless by their carelessness.
 
-
+(going to expand this a bit more)
 
 \subsection{Attacks on user's computer}
 
 Tor users can also be revealed or have their privacy compromised by their own workstations. If their computer contains spyware, backdoors, or other malicious software that can be used to identify them or their traffic, then a user may be tricked into believing that they are anonymous when in fact they are not.
 
-Javascript vs NoScript, TBB - javascript and cross-scripting
-
+(going to expand this a bit more, discuss Javascript vs NoScript, cross-site scripting attacks, TBB defenses)
 
 \subsection{Attacks on the Tor network}
 
@@ -128,9 +127,9 @@ The relay chosen for the first hop in the circuit has knowledge of the user's IP
 
 Tor combats this through \textit{entry guards}. The Tor client software chooses three relays out of the pool and then exclusively uses one of these chosen relays as the first hop of the circuit. This protects the end user against the \"predecessor attack\", wherein the attacker can preform end-to-end correlation and deanonymize the user if compromised nodes are chosen for the first and last hop in the circuit,\cite{Wright2004} and they make it more difficult for an attacker to add some relays to the Tor network and immediately begin tracing users. As of the time of this writing, there are 4,737 relays on the Tor network, so the chances of a client including a compromised node in its selection pool is 4,737 choose three without replacement, or 0.06334\%.
 
-Tor is susceptible to timing attacks. To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} Therefore, if an adversary controls both the first hop and the final hop in the Tor circuit then they can use statistical timing tests to become reasonably confident in identifying the activities of the end-user. For example, they could observe 198.51.100.37 connecting to their first node
+Tor is susceptible to timing attacks. To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} Therefore, if an adversary controls both the first hop and the final hop in the Tor circuit then they can use statistical timing tests to become reasonably confident in identifying the activities of the end-user. %For example, they could observe 198.51.100.37 connecting to their first node
 
-
+(going to expand this a bit more, add some citations)
 
 \subsection{Compromising the exit node}
 
@@ -144,27 +143,28 @@ An adversary could operate one or more exit nodes, as Egerstad did, or they coul
 
 The web server can also be a point of failure for the privacy and anonymity of the end user.
 
-Does the web server support SSL/TLS? The adversary could fake the server.
+(going to expand this a bit more. Does the web server support SSL/TLS? The adversary could fake masquerade as the server)
 
 \section{Adversaries}
 
 % https://blog.torproject.org/blog/improving-tors-anonymity-changing-guard-parameters
 
-It was recently revealed that the National Security Administration (NSA) has been targeting Tor, albeit with marginal success in breaking the anonymity and privacy of its users. However, in early October, the FBI successfully identified and arrested the owner of the Silk Road, a black market operating as a hidden service within the Tor network, and seized the service.
+%It was recently revealed that the National Security Administration (NSA) has been targeting Tor, albeit with marginal success in breaking the anonymity and privacy of its users. However, in early October, the FBI successfully identified and arrested the owner of the Silk Road, a black market operating as a hidden service within the Tor network, and seized the service.
 
-
+(going to expand this a bit more, discuss NSA, FBI, Silk Road, China, etc)
 
 \section{Analysis}
 
-
+(going to expand this a bit more and devote the couple pages to this section. I've got IEEE citations like \cite{Xin2009}, \cite{Ling2011}, and \cite{Ling2012} that should be very helpful in demonstrating some weaknesses of Tor
 
 \section{Conclusion}
 
+(obviously I need this. Summarize design, attacks, defenses, analysis, reviews in the literature, and then provide my opinion about the future)
 
+% -----------------------------------------------------------------------------
 
 % https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
 \begin{thebibliography}{9}
-
 
 % http://freehaven.net/anonbib/#Wright:2004
 \bibitem{Wright2004}
@@ -211,7 +211,6 @@ It was recently revealed that the National Security Administration (NSA) has bee
   \emph{Distinguisher and Related-Key Attack on the Full AES-256}
   Advances in Cryptology, 2009
 
-% TODO: use
 % http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4797313
 \bibitem{Xin2009}
   Liu Xin, Wang Neng
@@ -230,14 +229,12 @@ It was recently revealed that the National Security Administration (NSA) has bee
   \emph{Biclique Cryptanalysis of the Full AES}
   Microsoft Research Redmond, 2011
 
-% TODO: use
 % http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=5962653
 \bibitem{Ling2011}
   Zhen Ling
   \emph{Equal-Sized Cells Mean Equal-Sized Packets in Tor?}
   IEE International Conference on Communications, 2011
 
-% TODO: use
 % http://ac.els-cdn.com/S1389128612003799/1-s2.0-S1389128612003799-main.pdf?_tid=c6751d5e-5009-11e3-9ab2-00000aab0f26&acdnat=1384749046_78b8af8ba2cb2c0a2672840e0c7c5da1
 \bibitem{Ling2012}
   Zhen Ling, Junzhou Luo, Wei Yu, Xinwen Fuc, Weijia Jia, Wei Zhao
