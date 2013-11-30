@@ -103,7 +103,7 @@ Human mistakes are one of the most serious threats to deanonymization, and defen
 
 (notable examples, describe defenses)
 
-\subsection{Malware attacks}
+\subsection{Malware}
 
 Tor users can also be revealed or have their privacy compromised by their own workstations. If their computer contains spyware, backdoors, or other malicious software that can be used to identify them or their traffic, then a user may be tricked into believing that they are anonymous when in fact they are not.
 
@@ -119,7 +119,7 @@ Tor attempts to combat this through \textit{entry guards}, a feature introduced 
 
 To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} If an adversary controls both the first hop and the final hop in the Tor circuit, then it may be possible for the attacker to perform timing attacks. To do this, the attacker would listen for incoming packets from a certain IP and simultaneously keep track of traffic flow out of the exit node. They could then use statistics to gain a reasonable correlation between the incoming and outgoing traffic. This would result in a deanonymization of the end-user and, if the connection to the web server was not encrypted, reveal their traffic. At its onset Tor was susceptible to this timing attack, but as the size and usage of the Tor network increased, the likelihood of successfully launching such a traffic analysis attack quickly became negligible.\cite{Xin2009}
 
-\subsection{Compromising the exit node}
+\subsection{Wiretapping the exit node}
 
 Exit nodes are valuable on the Tor network due to their necessity for the final hop of the circuit and because they are rarer than traditional relays. Exit node operators typically have to deal with ISP complaints for any nefarious Internet activities performed by the users at the other end of the circuit. Although these complaints can be largely combated by implementing a reduced exit policy, there are 912 exit notes at the time of this writing, 19.74\% of the total 4,737 relays on the Tor network. It is entirely possible than an adversay could control an exit node, giving them insight into the traffic leaving Tor. If the traffic is encrypted, the exit node could still see the DNS lookup and HTTP headers. If encryption is not implemented, all traffic would thus be available for inspection.
 
@@ -133,9 +133,17 @@ The web server can also be a point of failure for the privacy and anonymity of t
 
 (going to expand this a bit more. Does the web server support SSL/TLS? The adversary could fake masquerade as the server)
 
-\subsection{Cryptography Attacks}
+\subsection{Cryptographic Attacks}
 
 Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
+
+\subsection{Active Digital Watermarks}
+
+Another potential method to de-anonymize users is through active watermarking of packets. Digital watermarks require less time deploy, often have a higher success rate, and do not require observing traffic for long periods of time. If an attacker can modify the traffic flow such that it is noticable at the other end of Tor, then it becomes easy to identify end users and correlate them with their activities.
+
+In 2011, Zhen Ling \textit{et al} described an active watermark attack in which an attacker operates a reverse proxy and actively manipulates the size of the TCP packets transmitted to the exit node. Simultaneously, the attacker also runs a recovery method to detect the watermark on the user side. His watermark was a short sequence of 1s and 0s that could be encoded into the packet patterns. To transmit a 0, the attacker sends 498 bytes worth of web traffic to the Tor exit node, which is the exact size of the data portion of a Tor cell. Combined with the cell headers, the data packs into a single Tor cell of 512 bytes. To transmit a 1, the attacker sends 2444 bytes of data to the exit. The standard Maximum Transmission Unit (MTU) for Ethernet v2 lines is 1500 bytes and the TCP and IP headers are 20 and 32 bytes respectively, which means that a TCP packet can carry at most 1448 bytes of data. As the 2444 bytes from the attacker exceeds the MTU, two TCP packets are needed, one with a 1448-byte payload and the other with a 996-byte payload. The first TCP packet is received by the relay and is packed into three equally-sized cells, with padding added to the 452 bytes of the third cell. The second TCP packet becomes two cells of 498 bytes each, and thus the 2444 bytes becomes five Tor cells. Then these cells are processed, encoded as TCP packets, and retransmitted to the next relay. However, due to the design of cell queuing algorithms, TCP retransmission, and MTU restrictions, the two TCP packets may be split and combined into Tor cells in up to five different ways, each leaving a discernible packet signature. The attacker can then monitor the traffic near the client, examining the packet patterns generated by the attack. If the embedded signal is found, then it is quite likely that the traffic flows are correlated. In their tests, Zhen Ling \textit{et al} achieved a detection rate of nearly 90\%, with a false positive rate of less than 4\%, concluding that such an attack could degrade anonymity.\cite{Ling2011}
+
+
 
 \section{Adversaries}
 
@@ -153,17 +161,21 @@ Earlier this year, Edward Snowden revealed that the United States National Secur
 
 Their documents revealed that as of 2012 they had access to very few nodes and that their goal is to control more, as they had only seen negligible success with circuit construction attacks. Further notes showed that they have had little success with timing attacks, and that they had put no effort towards revealing hidden services. While the NSA has Computer Network Exploitation (CNE) tools at their disposal for Windows, OS X, and Linux, as of 2012 CNE has been unsuccessful against the Tor Browser Bundle. If CNE exploits were possible, the NSA was considering the implications of attempting to direct the client to prefer NSA-controlled exit nodes, a private Tor network run by the NSA, or to reveal the client's IP by contacting an NSA web server directly. They were working on implementing this shaping attack. The NSA documents also showed that it was likely not legally or technically possible for them to exploit existing nodes, though they were considering exploiting web servers to make web surfing more difficult for Tor users. Considering psychological attacks, the authors concluded that Tor contained a critical mass of users, and that attempting to scare the public away from Tor could be counterproductive.\cite{GuardianTorStinks}
 
-The Tor developers responded to these and other similar article attacks, saying ``the good news is that they went for a browser exploit, meaning there's no indication they can break the Tor protocol or do traffic analysis on the Tor network. Infecting the laptop, phone, or desktop is still the easiest way to learn about the human behind the keyboard.'' and ``if you attack too many users, somebody's going to notice. So even if the NSA aims to surveil everyone, everywhere, they have to be a lot more selective about which Tor users they spy on. Just using Tor isn't enough to keep you safe in all cases.''. The developers also commented that the described attacks seemed ``relatively basic'' and ``out-of-date'', saying ``we still have a lot of work to do to make Tor both safe and usable, but we don't have any new work based on these slides''.\cite{TorBlogGuardian}
+The Tor developers responded to these and other related articles, saying ``the good news is that they went for a browser exploit, meaning there's no indication they can break the Tor protocol or do traffic analysis on the Tor network. Infecting the laptop, phone, or desktop is still the easiest way to learn about the human behind the keyboard.'' and ``if you attack too many users, somebody's going to notice. So even if the NSA aims to surveil everyone, everywhere, they have to be a lot more selective about which Tor users they spy on. Just using Tor isn't enough to keep you safe in all cases.''. The developers also commented that the described attacks seemed ``relatively basic'' and ``out-of-date'', saying ``we still have a lot of work to do to make Tor both safe and usable, but we don't have any new work based on these slides''.\cite{TorBlogGuardian}
 
 \subsection{FBI}
 
 One of the most famous attacks against Tor by the FBI was the successful finding and subsequent takedown of the Silk Road, a black market operating purely inside the Tor network as a hidden service. The Silk Road, sometimes called the ``eBay of illegal drugs'', first went online in February 2011, and remained covertly in use for two years later before Australian police discovered clues to its existence. The service could not be accessed from the traditional Internet, and, like other hidden services in the ``darknet'', was only available through the Tor network. On October 2, 2013, the FBI shut down the Silk Road and arrested the alleged owner, Ross Ulbricht in San Fransisco. Ulbricht mistakenly revealed his primary email address on a forum and later exposed his real IP by posing a question related to Silk Road on StackOverflow.com without using Tor. These clues then led to his arrest.
 
-The Tor Project responded to the Silk Road takedown with an analysis of the Tor network, saying ``So far, nothing about this case makes us think that there are new ways to compromise Tor (the software or the network). The FBI says that their suspect made mistakes in operational security, and was found through actual detective work.'' further saying that they found no evidence that the FBI broke into the webserver. They also reinforced their recommendations against providing public information online.\cite{TorBlogSilkRoad}
+The Tor Project responded to the Silk Road takedown with an analysis of the Tor network, saying ``So far, nothing about this case makes us think that there are new ways to compromise Tor (the software or the network). The FBI says that their suspect made mistakes in operational security, and was found through actual detective work.'' further saying that they found no evidence that the FBI broke into the webserver. They also reinforced their recommendations against providing personal information online.\cite{TorBlogSilkRoad}
 
 \section{Analysis}
 
 (going to expand this a bit more and devote the couple pages to this section. I've got IEEE citations like \cite{Xin2009}, \cite{Ling2011}, and \cite{Ling2012} that should be very helpful in demonstrating some weaknesses of Tor
+
+Bauer and McCoy, \textit{et al}, described a low-resource routing attack against the Tor network.\cite{Bauer2007}
+
+
 
 \section{Conclusion}
 
@@ -241,7 +253,7 @@ The Tor Project responded to the Silk Road takedown with an analysis of the Tor 
 \bibitem{Ling2011}
   Zhen Ling
   \emph{Equal-Sized Cells Mean Equal-Sized Packets in Tor?}
-  IEE International Conference on Communications, 2011
+  IEEE International Conference on Communications, 2011
 
 % http://ac.els-cdn.com/S1389128612003799/1-s2.0-S1389128612003799-main.pdf?_tid=c6751d5e-5009-11e3-9ab2-00000aab0f26&acdnat=1384749046_78b8af8ba2cb2c0a2672840e0c7c5da1
 \bibitem{Ling2012}
