@@ -3,14 +3,14 @@
 
 \begin{document}
 
-\title{The Tor Network - Strengths and Weaknesses \\ \Large Computer Security 1 - CS5460 \\ \LaTeX{}}
+\title{The Tor Network - Design and Defenses \\ \Large Computer Security 1 - CS5460 \\ \LaTeX{}}
 \author{Jesse Victors \\ November 2013}
 
 \maketitle
 
 \section{Introduction}
 
-The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tour routes encrypted TCP traffic through a worldwide network of over four thousand relays run by volunteers across the world. Tor's encryption, authentication, and routing protocols are designed to make it infeasible for any adversary to identify an end user or reveal their traffic. Throughout its history, various organizations and governments have attempted to block, tap, or crack the Tor network. It was recently revealed that the US National Security Agency has attempted to penetrate the Tor network. Tor is also currently undergoing a transition from RSA-based to elliptic-curve-based TLS. In light of these attacks, Tor's popularity, and the protocol transition, a question that must be asked both by its users and by outsiders is: how secure is Tor? How does it work, what does it provide, and what are its weaknesses? In this paper, I attempt to address these questions.
+The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tor, an open-source project run by a non-profit organization, routes encrypted TCP traffic through a worldwide network of over four thousand relays run by volunteers across the world. Tor's encryption, authentication, and routing protocols are designed to make it infeasible for any adversary to identify an end user or reveal their traffic. Throughout its history, various organizations and governments have attempted to block, tap, or crack the Tor network. It was recently revealed that the US National Security Agency has attempted to penetrate the Tor network. Tor is also currently undergoing a transition from RSA-based to elliptic-curve-based TLS. In light of these attacks, Tor's popularity, and the protocol transition, a question that must be asked both by its users and by outsiders is: how secure is Tor? How does it work, what does it provide, and what are its weaknesses? In this paper, I attempt to address these questions.
 
 \section{Design}
 
@@ -20,7 +20,7 @@ Tor provides an anonymity and privacy layer by relaying all end-user TCP traffic
 
 In traditional Internet connections, the client communicates directly with the server. In this model, an eavesdropper can often reveal both the identity of the end user and their activities. Direct encrypted connections do not hide IP headers, which expose source and destination addresses and the size of the payload. In the face of adversaries with sophisticated traffic analysis tools, such information can be very revealing for someone who wishes to hide their activities altogether.
 
-Tor combats this by routing end user traffic through a randomized path through the network of relays. To construct this circuit, the Tor client software first queries a trusted directory server, which return a list of Tor nodes. This is illustrated in Figure 1.
+Tor combats this by routing end user traffic through a randomized path through the network of relays. To construct this circuit, the Tor client software first queries a trusted directory server, which return a list of Tor nodes.\cite{Xin2009} This is illustrated in Figure 1.
 
 \begin{figure}[htbp]
 \centering
@@ -97,27 +97,27 @@ Robert Graham's analysis of the incoming handshakes to his exit node revealed th
 
 Attacks from adversaries against Tor can be classified into several categories: attack on the user, attacks on their computer, attacks on the Tor network itself, attacks on the exit's connection across the Internet, and attacks on the server. Tor's developers have implemented or recommended various defenses against common attacks on each of these layers.
 
-\subsection{Weaknesses introduced by the user}
+\subsection{Social engineering}
 
-Users on Tor must take precautions when using Tor. Although Tor's onion routing provides privacy and anonymity to their traffic, users can identify themselves by revealing their real name or information about where they are. If they build an electronic trail that can be used to deanonymize them, the use of Tor is rendered useless by their carelessness.
+Human mistakes are one of the most serious threats to deanonymization, and defenses against it are outside the scope of the Tor project. While Tor users can enjoy a reasonable level of anonymity and protection against traffic analysis, use of the Tor network is useless if information about their identity and/or location is leaked to the Internet. The electronic trail they leave behind can be used to completely deanonymize them and reveal their activities. The Tor Project provides recommendations that aim to prevent users from leaking their identity, but actual defenses against this attack are generally outside the scope of Tor.
 
-(going to expand this a bit more)
+(notable examples, describe defenses)
 
-\subsection{Attacks on user's computer}
+\subsection{Malware attacks}
 
 Tor users can also be revealed or have their privacy compromised by their own workstations. If their computer contains spyware, backdoors, or other malicious software that can be used to identify them or their traffic, then a user may be tricked into believing that they are anonymous when in fact they are not.
 
 (going to expand this a bit more, discuss Javascript vs NoScript, cross-site scripting attacks, TBB defenses)
 
-\subsection{Attacks on the Tor network}
+\subsection{Attacks against the Tor network}
+
+% https://blog.torproject.org/blog/improving-tors-anonymity-changing-guard-parameters
 
 The relay chosen for the first hop in the circuit has knowledge of the user's IP address, can thus deanonymize them in that respect. Although this first relay does not know the rest of the circuit and cannot deduce the final traffic exiting Tor, the knowledge of the user's IP can be problematic if the relay is operated by an attacker. With this information, an adversary would be able to trace users or deny them entry into the Tor network.
 
-Tor combats this through \textit{entry guards}. The Tor client software chooses three relays out of the pool and then exclusively uses one of these chosen relays as the first hop of the circuit. This protects the end user against the \"predecessor attack\", wherein the attacker can preform end-to-end correlation and deanonymize the user if compromised nodes are chosen for the first and last hop in the circuit,\cite{Wright2004} and they make it more difficult for an attacker to add some relays to the Tor network and immediately begin tracing users. As of the time of this writing, there are 4,737 relays on the Tor network, so the chances of a client including a compromised node in its selection pool is 4,737 choose three without replacement, or 0.06334\%.
+Tor attempts to combat this through \textit{entry guards}, a feature introduced in May 2006. Directory servers mark relays as guards as both being fast (i.e. has bandwidth above the median of all other relays) and stable (i.e. averages and uptime above the median of all other relays). The Tor client software chooses three guards out of the pool and then exclusively picks from these chosen relays as the first hop of any circuit.\cite{Xin2009} The goal of this selection is to protect the end user against the ``predecessor attack'', wherein the attacker can preform end-to-end correlation and deanonymize the user if compromised nodes are chosen for the first and last hop in the circuit.\cite{Wright2004} As relays initially are only the middle hop, this approach also makes it more difficult for an attacker to add relays to the Tor network and immediately begin tracing users. As of the time of this writing, there are 4,737 relays on the Tor network, which means that the chances of a client including a compromised node in its selection pool is 4,737 choose three without replacement, or 0.06334\%.
 
-Tor is susceptible to timing attacks. To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} Therefore, if an adversary controls both the first hop and the final hop in the Tor circuit then they can use statistical timing tests to become reasonably confident in identifying the activities of the end-user. %For example, they could observe 198.51.100.37 connecting to their first node
-
-(going to expand this a bit more, add some citations)
+To achieve its low-latency objective, Tor does not explicitly re-order or delay packets within the network.\cite{McCoy2008} If an adversary controls both the first hop and the final hop in the Tor circuit, then it may be possible for the attacker to perform timing attacks. To do this, the attacker would listen for incoming packets from a certain IP and simultaneously keep track of traffic flow out of the exit node. They could then use statistics to gain a reasonable correlation between the incoming and outgoing traffic. This would result in a deanonymization of the end-user and, if the connection to the web server was not encrypted, reveal their traffic. At its onset Tor was susceptible to this timing attack, but as the size and usage of the Tor network increased, the likelihood of successfully launching such a traffic analysis attack quickly became negligible.\cite{Xin2009}
 
 \subsection{Compromising the exit node}
 
@@ -127,21 +127,39 @@ In September 2007, Swedish security consultant Dan Egerstad operated five exit n
 
 An adversary could operate one or more exit nodes, as Egerstad did, or they could wiretap the exit's traffic and gain access to the traffic that way, perhaps without the knowledge of the exit operator. While the exit has no knowledge of the entire circuit and thus cannot deduce the origin of the traffic, the unencrypted traffic can be quite revealing and problematic, as Egerstad demonstrated. The primary way that Tor combats this through encryption. The Tor Browser Bundle comes with the HTTPS Everywhere, which prefers the use of HTTPS when connecting to web servers. Most email servers also support SSL/TLS, and users can also manually encrypt their documents or emails using PGP. Although Tor has no way of enforcing this final layer of encryption, it highly recommends it and places notices about this on many places on its website.
 
-\subsection{Attacks on the web server}
+\subsection{Web server vulnerabilities}
 
 The web server can also be a point of failure for the privacy and anonymity of the end user.
 
 (going to expand this a bit more. Does the web server support SSL/TLS? The adversary could fake masquerade as the server)
 
+\subsection{Cryptography Attacks}
+
+Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
+
 \section{Adversaries}
 
-% https://blog.torproject.org/blog/improving-tors-anonymity-changing-guard-parameters
+Tor is designed to counter traffic analysis and circumvent censorship, so naturally most adversaries against Tor are those who wish to enforce Internet censorship or watch the electronic activities of certain groups and organizations. Such adversaries can range from a small number of individuals to whole branches within national governments.
 
-%It was recently revealed that the National Security Administration (NSA) has been targeting Tor, albeit with marginal success in breaking the anonymity and privacy of its users. However, in early October, the FBI successfully identified and arrested the owner of the Silk Road, a black market operating as a hidden service within the Tor network, and seized the service.
+\subsection{China}
 
-(going to expand this a bit more, discuss NSA, FBI, Silk Road, China, etc)
+One of the most famous examples of Internet censorship is the Great Firewall of China, a project launched in late 2003 which aims to prohibit individuals from using the Internet for activities which are not approved by the Chinese government. The Chinese Ministry of Public Security maintains the most sophisticated content-filtering regime in the world and actively engages in DNS cache poisoning, IP/URL blocking, and packet filtering.
 
- Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
+Chinese citizens have increasingly grown increative in their attempts to \textit{fanqiang}, or ``climb the wall''. The Chinese government responds by actively blocking VPNs, proxies, and Tor relays. Despite these efforts, users are able to bypass the firewall via \textit{Tor bridges}, which act as the first hop into the Tor network. The list of bridges is not publicly published, making them difficult to blacklist. The Great Firewall of China attempts to dynamically block these bridges by detecting the Tor TLS handshake, probing the target bridge, and then blocking it if it responds with the Tor protocol. However, users can still easily gain access to Tor (and thus the rest of the Internet) by the use of Obfsproxy. Bridges that are wrapped with the Obfsproxy tool disguise their TLS handshake so that it looks like normal HTTP traffic and otherwise carries no discernible byte characteristics to the outside world, making Obfsproxy bridges nearly impossible to detect.\cite{Anderson2013}
+
+\subsection{NSA}
+
+Earlier this year, Edward Snowden revealed that the United States National Security Agency (NSA) has been attempting to de-anonymize Tor users, but with little success. In a June 2012 PowerPoint presentation titled ``Tor Stinks'', the NSA stated that ``with manual analysis we can de-anonymize a \textit{very small fraction} of Tor users'' but admitted that they have had no success in identifying a user on demand, and that they will never be able to de-anonymize all Tor users all the time. However, they had performed research on a variety of attacks against Tor. Their purpose was reveal ``terrorists'' and other individuals of interest to the United States.
+
+Their documents revealed that as of 2012 they had access to very few nodes and that their goal is to control more, as they had only seen negligible success with circuit construction attacks. Further notes showed that they have had little success with timing attacks, and that they had put no effort towards revealing hidden services. While the NSA has Computer Network Exploitation (CNE) tools at their disposal for Windows, OS X, and Linux, as of 2012 CNE has been unsuccessful against the Tor Browser Bundle. If CNE exploits were possible, the NSA was considering the implications of attempting to direct the client to prefer NSA-controlled exit nodes, a private Tor network run by the NSA, or to reveal the client's IP by contacting an NSA web server directly. They were working on implementing this shaping attack. The NSA documents also showed that it was likely not legally or technically possible for them to exploit existing nodes, though they were considering exploiting web servers to make web surfing more difficult for Tor users. Considering psychological attacks, the authors concluded that Tor contained a critical mass of users, and that attempting to scare the public away from Tor could be counterproductive.\cite{GuardianTorStinks}
+
+The Tor developers responded to these and other similar article attacks, saying ``the good news is that they went for a browser exploit, meaning there's no indication they can break the Tor protocol or do traffic analysis on the Tor network. Infecting the laptop, phone, or desktop is still the easiest way to learn about the human behind the keyboard.'' and ``if you attack too many users, somebody's going to notice. So even if the NSA aims to surveil everyone, everywhere, they have to be a lot more selective about which Tor users they spy on. Just using Tor isn't enough to keep you safe in all cases.''. The developers also commented that the described attacks seemed ``relatively basic'' and ``out-of-date'', saying ``we still have a lot of work to do to make Tor both safe and usable, but we don't have any new work based on these slides''.\cite{TorBlogGuardian}
+
+\subsection{FBI}
+
+One of the most famous attacks against Tor by the FBI was the successful finding and subsequent takedown of the Silk Road, a black market operating purely inside the Tor network as a hidden service. The Silk Road, sometimes called the ``eBay of illegal drugs'', first went online in February 2011, and remained covertly in use for two years later before Australian police discovered clues to its existence. The service could not be accessed from the traditional Internet, and, like other hidden services in the ``darknet'', was only available through the Tor network. On October 2, 2013, the FBI shut down the Silk Road and arrested the alleged owner, Ross Ulbricht in San Fransisco. Ulbricht mistakenly revealed his primary email address on a forum and later exposed his real IP by posing a question related to Silk Road on StackOverflow.com without using Tor. These clues then led to his arrest.
+
+The Tor Project responded to the Silk Road takedown with an analysis of the Tor network, saying ``So far, nothing about this case makes us think that there are new ways to compromise Tor (the software or the network). The FBI says that their suspect made mistakes in operational security, and was found through actual detective work.'' further saying that they found no evidence that the FBI broke into the webserver. They also reinforced their recommendations against providing public information online.\cite{TorBlogSilkRoad}
 
 \section{Analysis}
 
@@ -238,13 +256,31 @@ The web server can also be a point of failure for the privacy and anonymity of t
   \emph{Tor is still DHE 1024 (NSA crackable)}.
   Errata Security, 2013
 
+% http://queue.acm.org/detail.cfm?id=2405036
+\bibitem{Anderson2013}
+  Daniel Anderson
+  \emph{Splinternet Behind the Great Firewall of China: The Fight Against GFW}.
+  Association for Computing Machinery (ACM), Vol. 10, No. 11 (29 November 2012), doi:10.1145/2390756.2405036
+
+% https://blog.torproject.org/blog/tor-and-silk-road-takedown
+\bibitem{TorBlogSilkRoad}
+  arma
+  \emph{Tor and the Silk Road takedown}
+  The Tor Blog, 2 October 2013
+
+\bibitem{GuardianTorStinks}
+  The Guardian
+  \emph{'Tor Stinks' presentation}
+  The Guardian, 4 October 2013
+
+\bibitem{TorBlogGuardian}
+  Roger Dingledine
+  \emph{Yes, we know about the Guardian article}
+  Tor Project Blog, 4 October 2013
+
 % https://www.torproject.org/about/overview.html.en
 \bibitem{TorOverview}
   Overview of Tor
-
-% https://www.torproject.org/docs/faq.html.en
-\bibitem{TorFAQ}
-  Tor FAQ
 
 \end{thebibliography}
 
