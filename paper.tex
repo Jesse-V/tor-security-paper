@@ -10,7 +10,7 @@
 
 \section{Introduction}
 
-The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tor, an open-source project run by a non-profit organization, routes encrypted TCP traffic through a worldwide network of over four thousand relays run by volunteers across the world. Tor's encryption, authentication, and routing protocols are designed to make it infeasible for any adversary to identify an end user or reveal their traffic. Throughout its history, various organizations and governments have attempted to block, tap, or crack the Tor network. It was recently revealed that the US National Security Agency has attempted to penetrate the Tor network. Tor is also currently undergoing a transition from RSA-based to elliptic-curve-based TLS. In light of these attacks, Tor's popularity, and the protocol transition, a question that must be asked both by its users and by outsiders is: how secure is Tor? How does it work, what does it provide, and what are its weaknesses? In this paper, I attempt to address these questions.
+The Tor network is a second-generation onion routing system that aims to provide anonymity, privacy, and Internet censorship protection to its users. Tor, an open-source project run by a non-profit organization, routes encrypted TCP traffic through a worldwide network of over four thousand relays run by volunteers across the world. Tor's encryption, authentication, and routing protocols are designed to make it infeasible for any adversary to identify an end user or reveal their traffic. Throughout its history, various organizations and governments have attempted to block, tap, or crack the Tor network. Despite attacks against it, Tor remains one of the most popular and secure tools to use against network surveillance, traffic analysis, and information censorship. In light of recent attacks and Tor's popularity, a question that must be asked both by its users and by outsiders is: how secure is Tor? How does it work, what does it provide, and what are its weaknesses? In this paper, I attempt to address these questions.
 
 \section{Design}
 
@@ -20,7 +20,7 @@ Tor provides an anonymity and privacy layer by relaying all end-user TCP traffic
 
 In traditional Internet connections, the client communicates directly with the server. In this model, an eavesdropper can often reveal both the identity of the end user and their activities. Direct encrypted connections do not hide IP headers, which expose source and destination addresses and the size of the payload. In the face of adversaries with sophisticated traffic analysis tools, such information can be very revealing for someone who wishes to hide their activities altogether.
 
-Tor combats this by routing end user traffic through a randomized path through the network of relays. To construct this circuit, the Tor client software first queries a trusted directory server, which return a list of Tor nodes.\cite{Xin2009} This is illustrated in Figure 1.
+Tor combats this by routing end user traffic through a randomized circuit through the network of relays. The Tor client software first queries a trusted directory server. The returned list of Tor nodes contains their IPs, ports, and public onion keys,\cite{Xin2009} as illustrated in Figure 1.
 
 \begin{figure}[htbp]
 \centering
@@ -30,7 +30,7 @@ Tor combats this by routing end user traffic through a randomized path through t
 \end{minipage}
 \end{figure}
 
-The second step involves choosing three nodes to use and carefully constructing an encrypted path between them. The circuit is extended one hop at a time such that no single relay ever knows the complete path. The client negotiates a separate set of encryption keys for each hop along the circuit to ensure that each hop cannot trace these connections as they pass through, as seen in Figure 2.
+The second step involves choosing three unique nodes to use, establishing an encrypted connection with the first one, and then extending the circuit one hop at a time such that no single relay ever knows the complete path. Each relay can only perform one layer of decryption, so data is decrypted in an onion-like fashion as it passes through the circuit.
 
 \begin{figure}[htbp]
 \centering
@@ -40,17 +40,27 @@ The second step involves choosing three nodes to use and carefully constructing 
 \end{minipage}
 \end{figure}
 
-Following the complete establishment of a circuit, the Tor client software then offers a Secure Sockets (SOCKS) interface which multiplexes TCP traffic through Tor. As each relay sees no more than one hop in the circuit, neither an eavesdropper nor a compromised relay can use traffic analysis to link the connection's source and destination. Tor further obfuscates user traffic by changing the circuit path every ten minutes,\cite{McCoy2008} as shown in Figure 3.
+The client first establishes a TLS connection with the first relay, $R_{1}$, using the relay's public key. The client then uses a single Diffie-Hellman-Merkle key exchange to negotiate $K_{1}$ which is then used to generate two symmetric keys: a forward key $K_{1,F}$ and a backwards key $K_{1,B}$. $K_{1,F}$ is used to encrypt all communication from the client to $R_{1}$ and $K_{1,B}$ is used for all replies from $R_{1}$ to the client. These keys are used conjunction with the symmetric cipher suite negotiated during the TLS handshake, thus forming an encrypted tunnel. Once this one-hop circuit has been created, the client then sends $R_{1}$ the RELAY\_EXTEND command, the address of $R_{2}$, and the client's half of the Diffie-Hellman-Merkle protocol ($ g^a mod b $) using $K_{1,F}$. $R_{1}$ performs a TLS handshake with R${2}$ and uses $R_{2}$'s public key to send $ g^a mod b $ to $R_{2}$, who replies with his half of the handshake and a hash of $K_{2}$. $R_{1}$ then forwards this to the client under $R_{1,B}$ with the RELAY\_EXTENDED command to notify the client. The client generates $K_{1,F}$ and $K_{1,B}$ from $K_{2}$, and repeats the process for $R_{3}$,\cite{Ling2012} as shown in Figure 3.
 
 \begin{figure}[htbp]
 \centering
 \begin{minipage}{8 cm}
-  \includegraphics[width=80mm]{resources/circuit-building-3.png}
+    \includegraphics[width=80mm]{resources/circuit-construction.png}
+    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.\cite{TorOverview}}
+\end{minipage}
+\end{figure}
+
+Following the complete establishment of a circuit, the Tor client software then offers a Secure Sockets (SOCKS) interface which multiplexes TCP traffic through Tor. At the application layer, this data is packed and padded into equally-sized Tor \textit{cells}, transmission units of 512 bytes. As each relay sees no more than one hop in the circuit, in theory neither an eavesdropper nor a compromised relay can link the connection's source, destination, and content. Tor further obfuscates user traffic by changing the circuit path every ten minutes,\cite{McCoy2008} as shown in Figure 4.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{8 cm}
+  \includegraphics[width=80mm]{resources/circuit-change.png}
   \caption{A Tor circuit is changed periodically, essentially providing a new identity to the end user.\cite{TorOverview}}
 \end{minipage}
 \end{figure}
 
-It should be noted that traffic exiting the Tor network is often (but not always) encrypted on its way to the source. An outsider is therefore faced with up to four layers of TLS encryption. Currently, Tor is one of the most secure tools to use against network surveillance, traffic analysis, and to bypassing information censorship.
+An encrypted connection is often established with the other client or web server, depending on whether or not the recipient supports encryption. If this is the case, even the exit node cannot see the traffic in cleartext. An outsider is therefore faced with up to four layers of TLS encryption: $K_{1,F}(K_{2,F}(K_{3,F}(K_{server}(client\ request))))$ and likewise $K_{1,B}(K_{2,B}(K_{3,B}(K_{server}(server\ reply))))$ for the returning traffic. This makes traffic analysis and cryptographic attacks very difficult.
 
 \subsection{Encryption}
 
@@ -80,7 +90,7 @@ Elliptic Curve Cryptography (ECC) is an approach to public-key cryptography in w
 
 A smaller key size is one of the most significant benefits introduced by ECC. Current NIST recommendations state that a key size of 160 bits for ECC offers a similar level of security to 1024 bits of RSA/DH. Likewise, 224 bits for ECC is analogous to 2048 bits of RSA/DH. It should be noted that the required key sizes for ECC increases significantly slower than the key sizes for RSA and Diffie-Hellman. Thus ECC offers more security per increase in key size than for RSA. The smaller key size also directly correlates to an increase in computational efficiency; as the bit size increases, the speed difference between Diffie-Hellman and ECC grows superlinearly.\cite{CaseForECC}
 
-Tor 2.4.x introduced TLS\_ECDHE, which uses an elliptic-curve variant of the Diffie-Hellman key exchange. Like TLS\_DHE, the server uses its RSA key to digitally signs communication to the client. The TLS\_ECDHE protocol is believed to be more secure than TLS\_DHE.
+Tor is currently undergoing a transition from RSA-based to elliptic-curve-based TLS. Tor 2.4.x introduced TLS\_ECDHE, which uses an elliptic-curve variant of the Diffie-Hellman key exchange. Like TLS\_DHE, the server uses its RSA key to digitally signs communication to the client. The TLS\_ECDHE protocol is believed to be more secure than TLS\_DHE.
 
 \subsubsection{Symmetric-key}
 
@@ -137,7 +147,15 @@ The web server can also be a point of failure for the privacy and anonymity of t
 
 Although it is popular, a number of practical attacks and weaknesses have been demonstrated against its Key Scheduling Algorithm and PRNG that call into question RC4's security. In November 2013, Microsoft recommended disabling RC4 from TLS wherever possible.
 
-\subsection{Active Digital Watermarks}
+\subsection{Network-layer Exploitation}
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{8 cm}
+    \includegraphics[width=80mm]{resources/tor-cell-format.png}
+    \caption{The format of a Tor cell. The command field of a control cell (a) can be CELL\_PADDING, CELL\_CREATE, or CELL\_DESTROY, the latter two of which are used for creating a circuit to a relay. Only the 509-byte data section is encrypted in an onion-like fashion. \newline\hspace*{2em} The command field of a relay cell is CELL\_RELAY. The Relay Command header can be of numerous types, including RELAY\_BEGIN, RELAY\_DATA, RELAY\_END, RELAY\_EXTEND, and RELAY\_EXTENDED. DNS host resolution is signified by RELAY\_RESOLVE. The Recognized field is used to identify whether the cell is correctly recognized by the client or exit router. Stream\_ID is useful as multiple data streams can be multiplexed down a Tor circuit at the application layer by either the client and the exit node. The Integrity field is used to verify the integrity of the cell data, and the final Length field specifies the size of the traffic data, which may be padded.}
+\end{minipage}
+\end{figure}
 
 Another potential method to de-anonymize users is through active watermarking of packets. Digital watermarks require less time deploy, often have a higher success rate, and do not require observing traffic for long periods of time. If an attacker can modify the traffic flow such that it is noticable at the other end of Tor, then it becomes easy to identify end users and correlate them with their activities.
 
@@ -157,7 +175,7 @@ Chinese citizens have increasingly grown increative in their attempts to \textit
 
 \subsection{NSA}
 
-Earlier this year, Edward Snowden revealed that the United States National Security Agency (NSA) has been attempting to de-anonymize Tor users, but with little success. In a June 2012 PowerPoint presentation titled ``Tor Stinks'', the NSA stated that ``with manual analysis we can de-anonymize a \textit{very small fraction} of Tor users'' but admitted that they have had no success in identifying a user on demand, and that they will never be able to de-anonymize all Tor users all the time. However, they had performed research on a variety of attacks against Tor. Their purpose was reveal ``terrorists'' and other individuals of interest to the United States.
+Earlier this year, Edward Snowden revealed that the United States National Security Agency (NSA) has been attempting to penetrate the Tor network and de-anonymize its users, but with little success. In a June 2012 PowerPoint presentation titled ``Tor Stinks'', the NSA stated that ``with manual analysis we can de-anonymize a \textit{very small fraction} of Tor users'' but admitted that they have had no success in identifying a user on demand, and that they will never be able to de-anonymize all Tor users all the time. However, they had performed research on a variety of attacks against Tor. Their purpose was reveal ``terrorists'' and other individuals of interest to the United States.
 
 Their documents revealed that as of 2012 they had access to very few nodes and that their goal is to control more, as they had only seen negligible success with circuit construction attacks. Further notes showed that they have had little success with timing attacks, and that they had put no effort towards revealing hidden services. While the NSA has Computer Network Exploitation (CNE) tools at their disposal for Windows, OS X, and Linux, as of 2012 CNE has been unsuccessful against the Tor Browser Bundle. If CNE exploits were possible, the NSA was considering the implications of attempting to direct the client to prefer NSA-controlled exit nodes, a private Tor network run by the NSA, or to reveal the client's IP by contacting an NSA web server directly. They were working on implementing this shaping attack. The NSA documents also showed that it was likely not legally or technically possible for them to exploit existing nodes, though they were considering exploiting web servers to make web surfing more difficult for Tor users. Considering psychological attacks, the authors concluded that Tor contained a critical mass of users, and that attempting to scare the public away from Tor could be counterproductive.\cite{GuardianTorStinks}
 
