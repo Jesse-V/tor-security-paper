@@ -1,5 +1,6 @@
 \documentclass[journal]{IEEEtran}
 \usepackage{graphicx,mathtools}
+\usepackage[T1]{fontenc}
 
 \begin{document}
 
@@ -26,7 +27,7 @@ Tor combats this by routing end user traffic through a randomized circuit throug
 \centering
 \begin{minipage}{8 cm}
     \includegraphics[width=80mm]{resources/circuit-building-1.png}
-    \caption{The user's software first downloads a directory list of Tor relays. This information is later used to construct a circuit through the network.\cite{McCoy2008}\cite{TorOverview}}
+    \caption{The user's software first downloads a directory list of Tor relays. This information is later used to construct a circuit through the network.\cite{McCoy2008}}
 \end{minipage}
 \end{figure}
 
@@ -36,7 +37,7 @@ The second step involves choosing three unique nodes to use, establishing an enc
 \centering
 \begin{minipage}{8 cm}
     \includegraphics[width=80mm]{resources/circuit-building-2.png}
-    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.\cite{TorOverview}}
+    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.}
 \end{minipage}
 \end{figure}
 
@@ -46,7 +47,7 @@ The client first establishes a TLS connection with the first relay, $R_{1}$, usi
 \centering
 \begin{minipage}{8 cm}
     \includegraphics[width=80mm]{resources/circuit-construction.png}
-    \caption{A Tor circuit is incrementally constructed using layers of encryption. Each node has limited visibility, and no individual node knows the whole circuit.\cite{TorOverview}}
+    \caption{Construction of a Tor circuit.}
 \end{minipage}
 \end{figure}
 
@@ -177,7 +178,7 @@ Tor is designed to counter traffic analysis and circumvent censorship, so natura
 
 \subsection{China}
 
-One of the most famous examples of Internet censorship is the Great Firewall of China, a project launched in late 2003 which aims to prohibit individuals from using the Internet for activities which are not approved by the Chinese government. The Chinese Ministry of Public Security maintains the most sophisticated content-filtering regime in the world and actively engages in DNS cache poisoning, IP/URL blocking, and packet filtering.
+One of the most famous examples of Internet censorship is the Great Firewall of China, a project launched in late 2003 which aims to prohibit individuals from using the Internet for activities that are not approved by the Chinese government. The Chinese Ministry of Public Security maintains the most sophisticated content-filtering regime in the world and actively engages in DNS cache poisoning, IP/URL blocking, and packet filtering.
 
 Chinese citizens have increasingly grown increative in their attempts to \textit{fanqiang}, or ``climb the wall''. The Chinese government responds by actively blocking VPNs, proxies, and Tor relays. Despite these efforts, users are able to bypass the firewall via \textit{Tor bridges}, which act as the first hop into the Tor network. The list of bridges is not publicly published, making them difficult to blacklist. The Great Firewall of China attempts to dynamically block these bridges by detecting the Tor TLS handshake, probing the target bridge, and then blocking it if it responds with the Tor protocol. However, users can still easily gain access to Tor (and thus the rest of the Internet) by the use of Obfsproxy. Bridges that are wrapped with the Obfsproxy tool disguise their TLS handshake so that it looks like normal HTTP traffic and otherwise carries no discernible byte characteristics to the outside world, making Obfsproxy bridges nearly impossible to detect.\cite{Anderson2013}
 
@@ -315,10 +316,6 @@ Tor's developers and the open-source community continue to update the software w
   Roger Dingledine
   \emph{Yes, we know about the Guardian article}
   Tor Project Blog, 4 October 2013
-
-% https://www.torproject.org/about/overview.html.en
-\bibitem{TorOverview}
-  Overview of Tor
 
 \end{thebibliography}
 
